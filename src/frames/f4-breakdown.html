@@ -1,0 +1,271 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template id="f4-breakdown-template">
+      <style>
+/*@CSS*/
+        #f4-world { position: absolute; inset: 0; transform-origin: 960px 520px; }
+        #f4-src { position: absolute; left: 110px; top: 190px; width: 360px; height: 640px; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-lg); background: var(--lavender); transform-origin: 0 0; }
+        #f4-src .scene, #f4-src .scene svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+        #f4-src .tagline { position: absolute; left: 16px; bottom: 16px; display: flex; gap: 8px; }
+        #f4-src .tagline span { padding: 7px 12px; border-radius: 999px; background: rgba(255,255,255,.92); font: 700 16px/1 "Inter", sans-serif; color: var(--ink); }
+        .f4-slice { position: absolute; left: 110px; width: 360px; border-radius: 10px; overflow: hidden; transform-origin: 0 0; }
+        .f4-slice .band { position: absolute; left: 0; width: 360px; height: 640px; }
+        .f4-slice .band svg { display: block; width: 100%; height: 100%; }
+        .f4-slice .flat { position: absolute; inset: 0; background: #fff; border: 3px dashed #D8CEC5; border-radius: 10px; }
+        .f4-part { position: absolute; border-radius: 12px; border: 2.5px dashed #D8CEC5; }
+        .f4-part .fill { position: absolute; inset: -2.5px; border-radius: 12px; background: #fff; box-shadow: var(--shadow); }
+        .f4-part .edge { position: absolute; left: -2.5px; top: -2.5px; bottom: -2.5px; width: 8px; border-radius: 12px 0 0 12px; }
+        .f4-part .lb { position: absolute; left: 32px; top: 24px; }
+        #f4-A .q { position: absolute; left: 32px; right: 32px; top: 58px; height: 110px; font: 700 40px/1.2 "Sora", sans-serif; letter-spacing: -0.03em; color: var(--ink); }
+        #f4-A .q span.w { display: inline-block; margin-right: 0.24em; }
+        #f4-A .q .layer { position: absolute; inset: 0; overflow: hidden; }
+        .f4-row { position: absolute; left: 32px; right: 32px; height: 44px; display: flex; align-items: center; }
+        .f4-row .tm, .f4-row .ds { height: 30px; overflow: hidden; }
+        .f4-row .tm { width: 138px; flex: none; font: 500 18px/30px "JetBrains Mono", monospace; color: var(--ink-2); }
+        .f4-row .ds { flex: 1; font: 500 21px/30px "Inter", sans-serif; color: var(--ink); white-space: nowrap; }
+        .f4-row .roll { display: flex; flex-direction: column; }
+        .f4-row .roll span { display: block; height: 30px; }
+        .f4-row .bt { width: 150px; height: 12px; flex: none; position: relative; }
+        .f4-row .bt b { position: absolute; left: 0; top: 0; height: 12px; border-radius: 6px; background: var(--lavender); transform-origin: 0 50%; display: block; }
+        .f4-small { position: absolute; left: 28px; right: 28px; top: 50px; font: 500 19px/26px "Inter", sans-serif; color: var(--ink); }
+        .f4-small .layer { position: absolute; left: 0; right: 0; top: 0; }
+        #f4-E .pills { position: absolute; left: 178px; top: 12px; display: flex; gap: 10px; align-items: center; }
+        #f4-E .pills .pill { font-size: 18px; padding: 0 16px; height: 40px; }
+        #f4-reel { width: 168px; height: 40px; overflow: hidden; border-radius: 999px; position: relative; }
+        #f4-reel .stack { display: flex; flex-direction: column; }
+        #f4-reel .stack span { height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 18px; font: 600 20px/1 "Inter", sans-serif; color: var(--ink); }
+        #f4-reel .stack span i { width: 10px; height: 10px; border-radius: 50%; background: var(--ink); opacity: .55; }
+        #f4-cta { position: absolute; right: 26px; top: 23px; font: 500 16px/1 "JetBrains Mono", monospace; color: var(--ink-2); }
+        #f4-world { z-index: 2; }
+        #f4-stage .bd { z-index: 1; }
+        #f4-brand { position: absolute; left: 1400px; top: 150px; width: 440px; height: 520px; transform-origin: 50% 50%; }
+        #f4-brand .fill { position: absolute; inset: 0; border-radius: 12px; background: #fff; box-shadow: var(--shadow-lg); }
+        #f4-brand .ttl { position: absolute; left: 36px; top: 30px; font: 700 32px/1 "Sora", sans-serif; letter-spacing: -0.03em; color: var(--ink); }
+        #f4-brand .sub { position: absolute; left: 36px; top: 72px; font: 500 16px/1 "Inter", sans-serif; color: var(--muted); }
+        .f4-field { position: absolute; left: 36px; right: 30px; }
+        .f4-field .label { font-size: 14px; }
+        .f4-field .v { margin-top: 8px; font: 600 20px/1.3 "Inter", sans-serif; color: var(--ink); min-height: 26px; }
+        .f4-field .v span { display: inline-block; margin-right: .26em; }
+        .f4-field .ln { margin-top: 12px; height: 2px; background: var(--line); }
+        #f4-chip { position: absolute; left: 0; top: 0; padding: 12px 22px; border-radius: 999px; background: var(--peach); font: 700 22px/1 "Sora", sans-serif; letter-spacing: -0.02em; color: var(--ink); box-shadow: var(--shadow); white-space: nowrap; }
+        #f4-arrow { position: absolute; left: 560px; top: 500px; width: 560px; height: 40px; }
+        #f4-world { transform-origin: 0 0 !important; width: 1920px; height: 1080px; inset: auto; left: 0; top: 0; }
+        #f4-ph { position: absolute; left: 0; top: 0; width: 444px; height: 900px; }
+        #f4-brand { left: 1400px; top: 150px; }
+        .f4-strip { position: absolute; left: 0; top: 0; width: 1920px; height: 300px; z-index: 6; overflow: hidden; }
+        .f4-lab { left: 120px; top: 52px; font-size: 200px; }
+        #f4-L4 { top: 300px; font-size: 180px; line-height: 0.95; }
+        #f4-chip { z-index: 4; }
+        #f4-stage { position: absolute; inset: 0; }
+        .f4-part { z-index: 2; } #f4-world .bd { z-index: 1; }
+      </style>
+      <div data-hf-id="hf-dx50" id="root" data-composition-id="f4-breakdown" data-width="1920" data-height="1080" data-duration="27.28">
+        <div data-hf-id="hf-2ava" class="paper"></div>
+        <div data-hf-id="hf-qcey" id="f4-stage"></div>
+      </div>
+      <script>
+        (() => {
+/*@LIB*/
+          LB.prefix("f4");
+          LB.setShake("#f4-stage");
+          const SRC = { x: 110, y: 190, w: 360, h: 640 };
+          // Analysis parts (world coords, before the -50 brand shift)
+          const P = { A: [560, 110, 820, 190], B: [560, 320, 820, 340], C: [560, 680, 400, 140], D: [980, 680, 400, 140], E: [560, 845, 820, 64] };
+          const KEYS = ["A", "B", "C", "D", "E"];
+          const EDGE = { A: LB.C.lavender, B: LB.C.blue, C: LB.C.pink, D: LB.C.line, E: LB.C.green };
+          const words = (s, cls = "w") => s.split(" ").map((w) => `<span class="${cls}">${w}</span>`).join("");
+
+          const srcArt = LB.grindArt("f4s");
+          const slices = KEYS.map((k, i) => {
+            const h = SRC.h / 5, top = SRC.y + i * h;
+            return `<div class="f4-slice" id="f4-sl${k}" style="top:${top}px;height:${h}px"><div class="band" style="top:${-i * h}px">${LB.grindArt("f4b" + k)}</div><div class="flat"></div></div>`;
+          }).join("");
+          const part = (k, inner, label) => { const [x, y, w, h] = P[k];
+            return `<div class="f4-part" id="f4-${k}" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px"><div class="fill"></div><div class="edge" style="background:${EDGE[k]}"></div>${label ? `<div class="lb label">${label}</div>` : ""}${inner}</div>`; };
+          const rows = LB.OLD_BEATS.map(([tm, d, s], i) => { const n = LB.NEW_BEATS[i];
+            return `<div class="f4-row" id="f4-r${i}" style="top:${66 + i * 52}px">
+              <div class="tm"><div class="roll" id="f4-rt${i}"><span>${tm}</span><span>${n[0]}</span></div></div>
+              <div class="ds"><div class="roll" id="f4-rd${i}"><span>${d}</span><span>${n[1]}</span></div></div>
+              <div class="bt"><b id="f4-rb${i}" style="width:${(s / 9) * 150}px"></b></div></div>`; }).join("");
+          const OLD_SCRIPT = "You're making your coffee bitter and you don't even know it. It's not your beans. It's your grind. Watch this.";
+          const NEW_SCRIPT = "If your coffee tastes bitter at home, it's probably not your beans. It's your grind. Here's the fix.";
+          const FIELDS = [["Brand", "Hearth Coffee Co."], ["What you sell", "Small-batch roasted beans, delivered fortnightly"], ["Who it's for", "Home coffee drinkers who want café coffee without the café"], ["How you sound", "Warm, a bit nerdy, never snobby"]];
+
+          const BIG = { x: 718, y: 110, w: 484, h: 860 };
+          const bigSlices = KEYS.map((k, i) => {
+            const h = BIG.h / 5;
+            return `<div class="f4-slice" id="f4-sl${k}" style="left:${BIG.x}px;top:${BIG.y + i * h}px;width:${BIG.w}px;height:${h}px"><div class="band" style="top:${-i * h}px;width:${BIG.w}px;height:${BIG.h}px">${LB.grindArt("f4b" + k)}</div><div class="flat"></div></div>`;
+          }).join("");
+          const PH = LB.PH;
+          document.getElementById("f4-stage").innerHTML =
+            `<div id="f4-world">
+              <div id="f4-ph"><div class="phone" style="left:0;top:0"><div class="island"></div><div class="screen">${LB.libraryScreen("f4l", { counts: ["49"], withNew: true })}</div></div></div>
+              <svg id="f4-arrow" viewBox="0 0 560 40"><path d="M10 20 H530" stroke="#C9BDB2" stroke-width="4" stroke-dasharray="2 14" stroke-linecap="round"/><path d="M516 8 L536 20 L516 32" fill="none" stroke="#C9BDB2" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              ${part("A", `<div class="q"><div class="layer" id="f4-qo">${words(LB.OLD_HOOK)}</div><div class="layer" id="f4-qn">${words(LB.NEW_HOOK)}</div></div>`, `<span id="f4-al">Hook · 0:00–0:03</span>`)}
+              ${part("B", rows, "Shot beats")}
+              ${part("C", `<div class="f4-small"><div class="layer" id="f4-co">MISTAKE #1: your grind</div><div class="layer" id="f4-cn">${LB.NEW_CAPTION}</div></div>`, `<span id="f4-cl">On-screen text</span>`)}
+              ${part("D", `<div class="f4-small" style="font-size:17px;line-height:23px"><div class="layer" id="f4-do">${OLD_SCRIPT}</div><div class="layer" id="f4-dn">${NEW_SCRIPT}</div></div>`, "Script")}
+              ${part("E", `<div class="pills"><div id="f4-reel"><div class="stack" id="f4-reelst">${[["Awareness", LB.C.green], ["Consider", LB.C.lavender], ["Convert", LB.C.peach], ["Awareness", LB.C.green]].map(([t, c]) => `<span style="background:${c}"><i></i>${t}</span>`).join("")}</div></div><span class="pill" id="f4-p1" style="background:${LB.C.line}">Talking head</span><span class="pill" id="f4-p2" style="background:${LB.C.line}">Problem → fix</span></div><div id="f4-cta">CTA at 0:26</div>`, `<span style="position:relative;top:0">Who it's for</span>`)}
+              <div id="f4-brand"><div class="fill"></div><div class="edge" style="position:absolute;left:0;top:0;bottom:0;width:8px;border-radius:12px 0 0 12px;background:${LB.C.peach}"></div>
+                <div class="ttl">Your brand</div><div class="sub">Filled in once. Every brief is written against it.</div>
+                ${FIELDS.map(([l, v], i) => `<div class="f4-field" style="top:${118 + i * 98}px"><div class="label">${l}</div><div class="v" id="f4-f${i}">${words(v, "fw")}</div><div class="ln"></div></div>`).join("")}
+              </div>
+              ${LB.briefDoc("f4d")}
+              <div id="f4-src"><div class="scene">${srcArt}</div><div class="tagline"><span>@dailygrind</span><span>0:31</span></div></div>
+              ${bigSlices}
+              <div id="f4-chip">Hearth Coffee Co.</div>
+            </div>
+            <div class="f4-strip" id="f4-S1"><div class="kt f4-lab" id="f4-L1">${LB.chars("THE HOOK")}</div></div>
+            <div class="f4-strip" id="f4-S2"><div class="kt f4-lab" id="f4-L2">${LB.chars("EVERY SHOT")}</div></div>
+            <div class="f4-strip" id="f4-S3"><div class="kt f4-lab" id="f4-L3">${LB.chars("WHO IT’S FOR")}</div></div>
+            <div class="f4-strip" id="f4-S4" style="width:900px;height:1080px"><div class="kt f4-lab" id="f4-L4"><div>${LB.chars("YOUR")}</div><div>${LB.chars("BRAND")}</div></div></div>
+            <div class="f4-strip" id="f4-S5"><div class="kt f4-lab" id="f4-L5">${LB.chars("REWRITTEN.")}</div></div>`;
+
+          const tl = gsap.timeline({ paused: true });
+          const $ = (s) => document.querySelector(s);
+          const W = "#f4-world";
+          const shot = (px, py, s, t, dur = 0.6, ease = "pro-inout", ax = 960, ay = 540) => LB.cam(tl, W, px, py, s, t, dur, ease, ax, ay);
+          LB.camSet(tl, W, 960, 540, 1);
+// big floating label: letters rise in, drop out; `dim` = part keys pushed back while it is up
+          const label = (n, tIn, tOut, dim = []) => {
+            LB.riseChars(tl, "#f4-L" + n, tIn, 0.025, 0.55);
+            LB.dropChars(tl, "#f4-L" + n, tOut, 0.012, 0.3);
+            if (dim.length) { LB.defocus(tl, dim.join(", "), tIn - 0.1, true, 0.6, 0.22); LB.defocus(tl, dim.join(", "), tOut + 0.15, false); }
+          };
+
+          // ---------- Scene 7: the card lifts out and fills the frame, the phone leaves, the card opens ----------
+          LB.hide(tl, "#f4-ph", { x: PH.x, y: PH.y, scale: PH.s, transformOrigin: "0 0", rotationY: PH.ry, rotationX: 0, transformPerspective: 2000 });
+          LB.hide(tl, "#f4l-new-vw");
+          const lx = PH.x + (13 + 22) * PH.s, ly = PH.y + (13 + 308) * PH.s;
+          tl.fromTo("#f4-src", { x: lx - SRC.x, y: ly - SRC.y, scale: (181 * PH.s) / SRC.w, rotationY: PH.ry, transformPerspective: 2000 },
+            { x: BIG.x - SRC.x, y: BIG.y - SRC.y, scale: BIG.w / SRC.w, rotationY: -8, duration: 0.75, ease: "pro-inout" }, 0.05);
+          tl.to("#f4-src", { rotationY: 0, duration: 0.6, ease: "pro-pop" }, 0.8);
+          LB.hide(tl, "#f4l-new");
+          tl.to("#f4-ph", { x: PH.x - 1000, rotationY: 40, duration: 0.7, ease: "power3.in" }, 0.15);
+          LB.animGrind(tl, "f4s", 0.6, 27.28);
+          // drawers slide out of the big card, then each flies to its part shell
+          LB.hide(tl, ".f4-slice");
+          LB.hide(tl, ".f4-slice .flat");
+          KEYS.forEach((k, i) => {
+            const [x, y, w, h] = P[k], top = BIG.y + i * (BIG.h / 5);
+            tl.set(`#f4-sl${k}`, { opacity: 1 }, 0.95);
+            tl.fromTo(`#f4-sl${k}`, { x: 0 }, { x: 80 + i * 26, duration: 0.4, ease: "pro-out", immediateRender: false }, 0.95 + i * 0.06);
+            tl.fromTo(`#f4-sl${k} .flat`, { opacity: 0 }, { opacity: 1, duration: 0.2, immediateRender: false }, 1.4 + i * 0.05);
+            tl.to(`#f4-sl${k}`, { x: x - BIG.x, y: y - top, scaleX: w / BIG.w, scaleY: h / (BIG.h / 5), duration: 0.6, ease: "pro-inout" }, 1.5 + i * 0.07);
+            tl.to(`#f4-sl${k}`, { opacity: 0, duration: 0.18 }, 2.05 + i * 0.07);
+            tl.fromTo(`#f4-${k}`, { opacity: 0 }, { opacity: 1, duration: 0.18 }, 2.0 + i * 0.07);
+            LB.hide(tl, `#f4-${k} .fill, #f4-${k} .edge, #f4-${k} .lb`);
+          });
+          tl.to("#f4-src", { x: 0, y: 0, scale: 1, duration: 0.7, ease: "pro-inout" }, 1.55);
+          LB.hide(tl, "#f4-A .w, #f4-qn, .f4-row, #f4-C .f4-small, #f4-D .f4-small, #f4-E .pills, #f4-cta, #f4-cn, #f4-dn");
+          const fillPart = (k, t) => {
+            tl.to(`#f4-${k} .fill`, { opacity: 1, duration: 0.3, ease: "pro-out" }, t);
+            tl.to(`#f4-${k} .edge`, { opacity: 1, duration: 0.3 }, t + 0.05);
+            tl.fromTo(`#f4-${k} .lb`, { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.3, ease: "pro-out", immediateRender: false }, t + 0.1);
+            tl.to(`#f4-${k}`, { borderColor: "rgba(216,206,197,0)", duration: 0.3 }, t);
+          };
+
+          // ---------- Scene 8: THE HOOK — close-up, word for word ----------
+          shot(970, 205, 1.85, 2.55, 0.6, "pro-inout", 960, 640);
+          label(1, 2.95, 5.55);
+          fillPart("A", 3.0);
+          document.querySelectorAll("#f4-qo .w").forEach((el, i) => tl.fromTo(el, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.2, ease: "pro-out", immediateRender: false }, 3.55 + i * 0.165));
+
+          // ---------- Scene 9: EVERY SHOT ----------
+          shot(970, 490, 1.6, 5.7, 0.55, "pro-inout", 960, 650);
+          label(2, 5.95, 7.2, ["#f4-A"]);
+          fillPart("B", 5.9);
+          LB.OLD_BEATS.forEach((_, i) => {
+            tl.fromTo(`#f4-r${i}`, { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.35, ease: "pro-out", immediateRender: false }, 6.1 + i * 0.25);
+            tl.fromTo(`#f4-rb${i}`, { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: "pro-pop" }, 6.2 + i * 0.25);
+          });
+          shot(970, 660, 1.2, 7.3, 0.6);
+          ["C", "D"].forEach((k, i) => {
+            fillPart(k, 7.45 + i * 0.2);
+            tl.fromTo(`#f4-${k}`, { y: 40 }, { y: 0, duration: 0.5, ease: "pro-out", immediateRender: false }, 7.45 + i * 0.2);
+            tl.fromTo(`#f4-${k} .f4-small`, { opacity: 0 }, { opacity: 1, duration: 0.3, immediateRender: false }, 7.65 + i * 0.2);
+          });
+
+          // ---------- Scene 10: WHO IT'S FOR — funnel slot reel locks on Awareness ----------
+          shot(970, 877, 1.9, 8.1, 0.55, "pro-inout", 960, 660);
+          label(3, 8.4, 10.35, ["#f4-B", "#f4-C", "#f4-D"]);
+          fillPart("E", 8.35);
+          tl.fromTo("#f4-E .pills", { opacity: 0, y: -24 }, { opacity: 1, y: 0, duration: 0.35, ease: "pro-pop", immediateRender: false }, 8.45);
+          const reel = [{ p: 0 }, { p: 0 }, { p: 0 }];
+          const reelApply = () => { $("#f4-reelst").style.transform = `translateY(${-reel.reduce((a, s) => a + s.p, 0) * 40}px)`; };
+          reelApply();
+          reel.forEach((s, i) => tl.to(s, { p: 1, duration: i === 2 ? 0.5 : 0.3, ease: i === 2 ? "pro-pop" : "pro-pop", onUpdate: reelApply }, 8.8 + i * 0.28));
+          LB.nudge(tl, "#f4-reel", 9.45, 4, 5);
+          tl.fromTo("#f4-p1", { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "pro-pop", immediateRender: false }, 9.75);
+          tl.fromTo("#f4-p2", { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "pro-pop", immediateRender: false }, 9.95);
+          tl.fromTo("#f4-cta", { opacity: 0 }, { opacity: 1, duration: 0.3, immediateRender: false }, 10.2);
+          // pull back to everything, then the deliberate hold: only a slow push-in
+          shot(745, 510, 1.25, 10.55, 0.8, "pro-out");
+          shot(745, 510, 1.29, 11.4, 2.4, "pro-inout");
+
+          // ---------- Scene 11: YOUR BRAND ----------
+          shot(1620, 410, 1.5, 13.95, 0.7, "pro-inout", 1300, 560);
+          tl.fromTo("#f4-brand", { x: 600, rotationY: -25, opacity: 0, transformPerspective: 2000 }, { x: 0, rotationY: 0, opacity: 1, duration: 0.7, ease: "pro-out" }, 14.05);
+          label(4, 14.3, 19.2, ["#f4-A", "#f4-B", "#f4-C", "#f4-D", "#f4-E", "#f4-src"]);
+          LB.hide(tl, ".f4-field .fw");
+          [15.72, 16.5, 17.42, 18.66].forEach((t, i) => {
+            document.getElementById("f4-f" + i).querySelectorAll(".fw").forEach((el, j) => tl.fromTo(el, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.18, ease: "pro-out", immediateRender: false }, t + j * 0.07));
+          });
+          shot(1620, 450, 1.58, 16.3, 2.6, "pro-inout", 1300, 560);
+
+          // ---------- Scene 12: the rebuild — camera follows each card ----------
+          shot(970, 205, 1.6, 19.4, 0.6, "pro-inout", 960, 640);
+          label(5, 20.15, 22.3);
+          document.querySelectorAll("#f4-qo .w").forEach((el, i) => tl.to(el, { y: -70, opacity: 0, duration: 0.24, ease: "power2.in" }, 20.15 + i * 0.035));
+          tl.set("#f4-qn", { opacity: 1 }, 20.2);
+          document.querySelectorAll("#f4-qn .w").forEach((el, i) => tl.fromTo(el, { y: 70, opacity: 0 }, { y: 0, opacity: 1, duration: 0.32, ease: "pro-pop", immediateRender: false }, 20.3 + i * 0.045));
+          LB.hide(tl, "#f4-qn .w");
+          tl.to("#f4-al", { opacity: 0, duration: 0.15 }, 20.15);
+          // brand profile → peach chip → flies onto the top of the stack
+          LB.hide(tl, "#f4-chip", { x: 1500, y: 386, opacity: 0, scale: 0.6 });
+          tl.to("#f4-brand", { scale: 0.3, opacity: 0, duration: 0.45, ease: "power2.in" }, 21.3);
+          tl.to("#f4-chip", { opacity: 1, scale: 1, duration: 0.3, ease: "pro-pop" }, 21.55);
+          tl.to("#f4-chip", { y: 46, duration: 0.4, ease: "pro-out" }, 21.85);
+          tl.to("#f4-chip", { x: 560, rotation: -4, duration: 0.7, ease: "pro-inout" }, 21.95);
+          tl.to("#f4-chip", { rotation: 0, duration: 0.4, ease: "pro-pop" }, 22.66);
+          // shot list flips
+          shot(970, 490, 1.45, 22.95, 0.5);
+          LB.OLD_BEATS.forEach((_, i) => {
+            tl.to(`#f4-rd${i}, #f4-rt${i}`, { y: -30, duration: 0.32, ease: "pro-pop" }, 23.25 + i * 0.12);
+            tl.to(`#f4-rb${i}`, { scaleX: LB.NEW_BEATS[i][2] / LB.OLD_BEATS[i][2], duration: 0.4, ease: "pro-pop" }, 23.3 + i * 0.12);
+          });
+          // script, then caption
+          shot(970, 750, 1.45, 23.75, 0.5, "pro-inout", 960, 540);
+          tl.to("#f4-do", { y: -40, opacity: 0, duration: 0.25, ease: "power2.in" }, 23.9);
+          tl.fromTo("#f4-dn", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: "pro-out", immediateRender: false }, 24.05);
+          tl.to("#f4-co", { y: -40, opacity: 0, duration: 0.25, ease: "power2.in" }, 24.8);
+          tl.to("#f4-cl", { opacity: 0, duration: 0.12 }, 24.8);
+          tl.fromTo("#f4-cn", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: "pro-out", immediateRender: false }, 24.95);
+
+          // pull back, everything snaps together into one brief on the right third
+          shot(960, 540, 1, 25.15, 0.55, "pro-inout");
+          const TGT = { A: [1256, 124, 0.644], B: [1256, 258, 0.644], C: [1256, 534, 1.32], D: [1390, 380, 0.45], E: [1256, 652, 0.644] };
+          LB.hide(tl, "#f4d-doc", { opacity: 0, scale: 0.94, transformOrigin: "50% 50%" });
+          LB.hide(tl, "#f4d-doc .in > *");
+          KEYS.forEach((k, i) => {
+            const [x, y] = P[k], [tx, ty, s] = TGT[k];
+            tl.to(`#f4-${k}`, { x: tx - x, y: ty - y, scale: s, transformOrigin: "0 0", duration: 0.5, ease: "pro-pop" }, 25.45 + i * 0.05);
+            tl.to(`#f4-${k}`, { opacity: 0, duration: 0.25 }, 26.05 + i * 0.03);
+          });
+          tl.to("#f4-chip", { x: 1256, y: 90, duration: 0.5, ease: "pro-inout" }, 25.45);
+          tl.to("#f4-chip", { opacity: 0, duration: 0.2 }, 26.0);
+          tl.to("#f4d-doc", { opacity: 1, scale: 1, duration: 0.5, ease: "pro-pop" }, 25.5);
+          tl.to("#f4d-doc .in > *", { opacity: 1, duration: 0.25 }, 25.95);
+          LB.camShake(tl, "#f4-stage", 25.95, 3, 0.2);
+          tl.to("#f4-src", { opacity: 0.4, duration: 0.6, ease: "pro-inout" }, 25.6);
+          LB.hide(tl, "#f4-arrow");
+          tl.fromTo("#f4-arrow", { opacity: 0, scaleX: 0.2, transformOrigin: "0 50%" }, { opacity: 1, scaleX: 1, duration: 0.5, ease: "pro-out", immediateRender: false }, 26.1);
+
+          window.__timelines["f4-breakdown"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

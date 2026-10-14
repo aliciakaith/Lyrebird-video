@@ -1,0 +1,190 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template id="f3-save-upload-template">
+      <style>
+/*@CSS*/
+        #f3-sheet { position: absolute; left: 0; right: 0; bottom: 0; height: 300px; background: #fff; border-radius: 26px 26px 0 0; box-shadow: 0 -10px 40px rgba(51,36,28,.18); z-index: 20; }
+        #f3-sheet .hd { position: absolute; left: 50%; top: 10px; width: 40px; height: 5px; margin-left: -20px; border-radius: 3px; background: var(--line); }
+        #f3-sheet .tt { position: absolute; left: 0; right: 0; top: 30px; text-align: center; font: 600 16px/1 "Inter", sans-serif; color: var(--ink); }
+        .f3-btn { position: absolute; top: 72px; width: 90px; height: 100px; margin-left: -45px; font: 600 13px/1.2 "Inter", sans-serif; color: var(--ink); text-align: center; }
+        .f3-btn .bl { position: absolute; left: 0; right: 0; top: 72px; display: block; }
+        .f3-btn .c { position: absolute; left: 14px; top: 0; width: 62px; height: 62px; border-radius: 50%; background: var(--bg); border: 1.5px solid var(--line); display: flex; align-items: center; justify-content: center; }
+        .f3-btn .c svg { width: 26px; height: 26px; }
+        #f3-ring { position: absolute; left: -6px; top: -6px; width: 74px; height: 74px; transform: rotate(-90deg); }
+        #f3-check { position: absolute; inset: 0; border-radius: 50%; background: var(--ink); display: flex; align-items: center; justify-content: center; }
+        #f3-roll, #f3-libwrap { position: absolute; inset: 0; background: #fff; z-index: 25; } #f3-libwrap { z-index: 26; }
+        #f3-roll .h { position: absolute; left: 20px; top: 76px; font: 700 28px/1 "Sora", sans-serif; letter-spacing: -0.03em; color: var(--ink); }
+        #f3-roll .s { position: absolute; right: 20px; top: 84px; font: 600 14px/1 "Inter", sans-serif; color: var(--muted); }
+        .f3-cell { position: absolute; width: 134px; height: 238px; }
+        .f3-cell .thumb { width: 100%; height: 100%; }
+        #f3-slot0 { border: 2px dashed var(--line); border-radius: 8px; }
+        #f3-dim { position: absolute; inset: 0; background: rgba(51,36,28,.38); z-index: 40; }
+        #f3-pick { position: absolute; left: 0; right: 0; top: 130px; bottom: 0; background: #fff; border-radius: 28px 28px 0 0; z-index: 41; box-shadow: 0 -10px 40px rgba(51,36,28,.2); }
+        #f3-pick .top { position: absolute; left: 20px; right: 20px; top: 22px; display: flex; justify-content: space-between; font: 600 13px/1 "Inter", sans-serif; color: var(--ink); }
+        #f3-pick .h { position: absolute; left: 20px; top: 54px; font: 700 26px/1 "Sora", sans-serif; letter-spacing: -0.03em; color: var(--ink); }
+        #f3-pick .s { position: absolute; left: 20px; top: 88px; font: 500 12px/1 "Inter", sans-serif; color: var(--muted); }
+        .f3-pc { position: absolute; width: 122px; height: 216px; }
+        .f3-pc .thumb { width: 100%; height: 100%; }
+        #f3-badge { position: absolute; right: 8px; top: 8px; width: 28px; height: 28px; border-radius: 50%; background: var(--ink); border: 2px solid #fff; display: flex; align-items: center; justify-content: center; }
+        #f3-bar { position: absolute; left: 16px; right: 16px; bottom: 30px; height: 64px; border-radius: 16px; background: var(--ink); display: flex; align-items: center; justify-content: space-between; padding: 0 12px 0 20px; color: #fff; font: 600 14px/1 "Inter", sans-serif; }
+        #f3-cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+        #f3-ph { position: absolute; left: 0; top: 0; width: 444px; height: 900px; z-index: 2; }
+                #f3-upl { left: 1345px; top: 180px; font-size: 118px; line-height: 0.95; z-index: 4; }
+        #f3-stage { position: absolute; inset: 0; }
+        #f3-big { position: absolute; inset: 0; background: var(--lavender); z-index: 10; }
+                #f3-bigcard { position: absolute; left: 200px; top: 250px; width: 400px; height: 711px; border-radius: 14px; overflow: hidden; box-shadow: var(--shadow-lg); transform-origin: 50% 50%; }
+        #f3m { z-index: 5; }
+        #f3-bigcard svg { display: block; width: 100%; height: 100%; }
+                #f3-bigring { position: absolute; left: 690px; top: 360px; width: 540px; height: 540px; transform-origin: 50% 50%; }
+                #f3-save { left: 0; width: 1920px; top: 90px; font-size: 200px; text-align: center; }
+        #f3-up { padding: 12px 22px; border-radius: 999px; background: var(--peach); color: var(--ink); font: 700 14px/1 "Inter", sans-serif; }
+      </style>
+      <div data-hf-id="hf-cwog" id="root" data-composition-id="f3-save-upload" data-width="1920" data-height="1080" data-duration="8.04">
+        <div data-hf-id="hf-2ava" class="paper"></div>
+        <div data-hf-id="hf-8zlt" id="f3-stage"></div>
+      </div>
+      <script>
+        (() => {
+/*@LIB*/
+          LB.prefix("f3");
+          LB.setShake("#f3-stage");
+          const CHECK = `<svg viewBox="0 0 24 24" width="22" height="22"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+          const ICONS = [
+            `<svg viewBox="0 0 26 26"><path d="M13 4v12M7.5 11l5.5 5.5 5.5-5.5M5 21h16" fill="none" stroke="#33241C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+            `<svg viewBox="0 0 26 26"><path d="M11 15l4-4M9 12l-2 2a3.5 3.5 0 0 0 5 5l2-2M17 14l2-2a3.5 3.5 0 0 0-5-5l-2 2" fill="none" stroke="#33241C" stroke-width="2.4" stroke-linecap="round"/></svg>`,
+            `<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="8.5" fill="none" stroke="#33241C" stroke-width="2.4"/><path d="M7 19L19 7" stroke="#33241C" stroke-width="2.4"/></svg>`,
+            `<svg viewBox="0 0 26 26"><circle cx="6" cy="13" r="2.2" fill="#33241C"/><circle cx="13" cy="13" r="2.2" fill="#33241C"/><circle cx="20" cy="13" r="2.2" fill="#33241C"/></svg>`,
+          ];
+          const LABELS = ["Save video", "Copy link", "Not interested", "More"];
+          const btns = LABELS.map((l, i) => `<div class="f3-btn" style="left:${62 + i * 98}px"><div class="c" id="f3-b${i}">${ICONS[i]}${i === 0 ? `<svg id="f3-ring" viewBox="0 0 74 74"><circle cx="37" cy="37" r="34" fill="none" stroke="#33241C" stroke-width="4" stroke-linecap="round" stroke-dasharray="213.6" stroke-dashoffset="213.6"/></svg><div id="f3-check">${CHECK}</div>` : ""}</div><span class="bl">${l}</span></div>`).join("");
+          const ROLL = [1, 3, 5, 7, 9, 11, 2, 4];
+          const cell = (i) => [4 + (i % 3) * 137, 120 + Math.floor(i / 3) * 243];
+          const rollCells = `<div class="f3-cell" id="f3-slot0" style="left:${cell(0)[0]}px;top:${cell(0)[1]}px"></div>` +
+            ROLL.map((a, i) => { const [x, y] = cell(i + 1); return `<div class="f3-cell" style="left:${x}px;top:${y}px">${LB.thumb(a)}</div>`; }).join("") +
+            `<div class="f3-cell" id="f3-newcell" style="left:${cell(0)[0]}px;top:${cell(0)[1]}px;z-index:5">${LB.thumb(0, { art: LB.grindArt("f3t").replace("<svg ", '<svg class="art" '), dur: "0:31" })}</div>`;
+          const pc = (i) => [16 + (i % 3) * 130, 112 + Math.floor(i / 3) * 224];
+          const pickCells = [0, 1, 3, 5, 7, 9].map((a, i) => { const [x, y] = pc(i);
+            const art = i === 0 ? LB.thumb(0, { art: LB.grindArt("f3p").replace("<svg ", '<svg class="art" '), dur: "0:31" }) : LB.thumb(a);
+            return `<div class="f3-pc" id="f3-pc${i}" style="left:${x}px;top:${y}px">${art}${i === 0 ? `<div id="f3-badge">${CHECK.replace(/22/g, "14")}</div>` : ""}</div>`; }).join("");
+
+          document.getElementById("f3-stage").innerHTML =
+            `<div id="f3-cam">
+              <div id="f3-ph"><div class="phone" id="f3-phone" style="left:0;top:0"><div class="island"></div><div class="screen" id="f3-screen">
+              ${LB.player({ id: "f3-pl", x: 0, y: 0, w: 418, h: 874, style: "border-radius:0;box-shadow:none", handle: "@dailygrind", caption: "you're making your coffee bitter and you don't even know it", views: "2.4M", art: LB.grindArt("f3g") })}
+              ${LB.statusBar()}
+              <div id="f3-sheet"><div class="hd"></div><div class="tt">Share to</div>${btns}</div>
+              <div id="f3-roll">${LB.statusBar()}<div class="h">Recents</div><div class="s">Videos</div>${rollCells}</div>
+              <div id="f3-libwrap">${LB.libraryScreen("f3l", { counts: ["48", "49"], newHidden: true })}
+                <div id="f3-dim"></div>
+                <div id="f3-pick"><div class="top"><span>Cancel</span><span>Recents</span><span>Albums</span></div><div class="h">Pick your saves</div>
+                  <div class="s">Videos only · we read the file, not the link</div>${pickCells}
+                  <div id="f3-bar"><span id="f3-sel">1 video selected</span><span id="f3-up">Upload</span></div></div>
+              </div>
+              <div class="tap" id="f3-t1" style="left:62px;top:${874 - 300 + 103}px"></div>
+              <div class="tap" id="f3-t2" style="left:209px;top:790px"></div>
+              <div class="tap" id="f3-t3" style="left:77px;top:${130 + 112 + 108}px"></div>
+              <div class="tap" id="f3-t4" style="left:${418 - 16 - 12 - 50}px;top:${874 - 30 - 32}px"></div>
+            </div></div></div>
+            </div>
+            <div class="kt" id="f3-upl"><div>${LB.chars("UPLOAD")}</div><div>${LB.chars("IT.")}</div></div>
+            ${LB.mascot("f3m", "green", { x: 1470, y: 610, w: 440 })}
+            <div id="f3-big">
+              <div id="f3-bigcard">${LB.grindArt("f3bc")}</div>
+              <svg id="f3-bigring" viewBox="0 0 600 600"><circle cx="300" cy="300" r="270" fill="#fff"/><circle id="f3-bigarc" cx="300" cy="300" r="270" fill="none" stroke="#33241C" stroke-width="22" stroke-linecap="round" stroke-dasharray="1696.5" stroke-dashoffset="1696.5" transform="rotate(-90 300 300)"/>
+                <g id="f3-bigarrow"><path d="M300 170 V390 M210 300 L300 390 L390 300" fill="none" stroke="#33241C" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/><path d="M190 450 H410" stroke="#33241C" stroke-width="30" stroke-linecap="round"/></g>
+                <path id="f3-bigcheck" d="M185 310 L265 390 L420 220" fill="none" stroke="#33241C" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <div class="kt" id="f3-save">${LB.chars("SAVE IT.")}</div>
+            </div>`;
+
+          const tl = gsap.timeline({ paused: true });
+          const CAM = "#f3-cam", PH = LB.PH;
+          LB.hide(tl, "#f3-ph", { x: PH.x, y: PH.y, scale: PH.s, transformOrigin: "0 0", rotationY: 0, rotationX: 0, transformPerspective: 2000 });
+
+          // ---------- arrival out of the zoom-through, then one slow, steady push ----------
+          LB.camSet(tl, CAM, 560, 640, 2.4);
+          LB.cam(tl, CAM, 960, 540, 1, 0.22, 0.9, "pro-out");
+          LB.animGrind(tl, "f3g", 0, 2.4);
+          // mascot: calm companion while the phone is on screen
+          const M = "#f3m";
+          tl.fromTo(M, { y: 520 }, { y: 0, duration: 0.7, ease: "pro-out" }, 0.45);
+          LB.squash(tl, M, 1.1, 1.06, 0.94);
+          LB.emote(tl, "f3m", "happy", 0.5);
+          LB.look(tl, "f3m", -50, -16, 0.9, 0.4);
+          LB.bob(tl, "f3m", 1.2, 8.04, 6, 2.0);
+          LB.brows(tl, "f3m", "up", 1.7);
+          LB.emote(tl, "f3m", "joy", 4.45, 0.2);
+          LB.squash(tl, M, 4.5, 1.08, 0.92);
+          LB.emote(tl, "f3m", "happy", 5.2, 0.2);
+          LB.look(tl, "f3m", -60, -24, 5.2, 0.4);
+          LB.emote(tl, "f3m", "joy", 6.95, 0.2);
+          LB.squash(tl, M, 7.0, 1.08, 0.92);
+          [3.0, 5.7, 6.5].forEach((t) => LB.blink(tl, "f3m", t));
+          tl.to(M, { y: 560, duration: 0.45, ease: "power2.in" }, 7.55);
+
+          // ---------- Save: share sheet, one tap ----------
+          LB.hide(tl, "#f3-check", { scale: 0, opacity: 0 });
+          // one smooth, straight zoom onto the share sheet so the tap reads
+          LB.cam(tl, CAM, 546, 1060, 1.7, 1.05, 0.7, "pro-inout", 960, 560);
+          tl.fromTo("#f3-sheet", { y: 320 }, { y: 0, duration: 0.45, ease: "pro-out" }, 1.25);
+          LB.tap(tl, "#f3-t1", 1.72);
+          LB.press(tl, "#f3-b0", 1.72);
+          tl.to("#f3-check", { scale: 1, opacity: 1, duration: 0.3, ease: "pro-pop" }, 1.85);
+
+          // ---------- the big save moment: full-frame panel, card drops into a giant download ring ----------
+          LB.hide(tl, "#f3-big", { clipPath: "circle(0px at 627px 509px)" });
+          LB.hide(tl, "#f3-bigcheck", { opacity: 0, scale: 0.6, transformOrigin: "300px 300px" });
+          tl.to("#f3-big", { clipPath: "circle(2300px at 627px 509px)", duration: 0.6, ease: "pro-inout" }, 1.95);
+          tl.fromTo("#f3-bigcard", { y: 320, scale: 0.7, rotation: -6 }, { y: 0, scale: 1, rotation: -4, duration: 0.55, ease: "pro-out" }, 2.1);
+          tl.fromTo("#f3-bigring", { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "pro-pop" }, 2.25);
+          LB.slam(tl, "#f3-save", 2.5, 1.4, 0.45);
+          // the card slides down into the ring, the ring fills, arrow → check
+          tl.to("#f3-bigcard", { x: 560, y: 25, scale: 0.18, rotation: 0, opacity: 0, duration: 0.55, ease: "power3.in" }, 2.75);
+          tl.to("#f3-bigarc", { attr: { "stroke-dashoffset": 0 }, duration: 0.55, ease: "pro-inout" }, 2.9);
+          tl.to("#f3-bigarrow", { y: 40, opacity: 0, duration: 0.12, ease: "power2.in" }, 3.36);
+          tl.to("#f3-bigcheck", { opacity: 1, scale: 1, duration: 0.35, ease: "pro-pop" }, 3.5);
+          LB.punch(tl, "#f3-bigring", 3.55, 0.06);
+          // back to the phone: the save is the first thing in the camera roll
+          tl.to("#f3-big", { clipPath: "circle(0px at 563px 400px)", duration: 0.55, ease: "pro-inout" }, 4.0);
+          tl.set("#f3-sheet", { y: 320 }, 3.9);
+          LB.cam(tl, CAM, 960, 540, 1, 3.85, 0.05, "none");
+          LB.hide(tl, "#f3-roll");
+          tl.set("#f3-roll", { opacity: 1 }, 3.9);
+          tl.fromTo("#f3-newcell", { y: -260, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "pro-pop" }, 4.25);
+
+          // ---------- Upload: one smooth zoom for the taps, UPLOAD IT. beside it ----------
+          LB.hide(tl, "#f3-dim");
+          LB.hide(tl, "#f3-pick", { y: 760 });
+          LB.hide(tl, "#f3-badge", { scale: 0 });
+          LB.hide(tl, "#f3l-new", { opacity: 0, scale: 0.85 });
+          LB.hide(tl, "#f3-t3");
+          tl.fromTo("#f3-libwrap", { x: 418 }, { x: 0, duration: 0.45, ease: "pro-out" }, 4.8);
+          // one smooth zoom onto the bottom of the phone (the + and the Upload bar share this spot), one zoom back out
+          LB.cam(tl, CAM, 546, 1195, 1.7, 4.95, 0.8, "pro-inout", 760, 620);
+          LB.cam(tl, CAM, 960, 540, 1, 6.5, 0.75, "pro-inout");
+          LB.slam(tl, "#f3-upl", 4.95, 1.3, 0.45);
+          LB.tap(tl, "#f3-t2", 5.6);
+          LB.press(tl, "#f3l-plus", 5.6);
+          tl.to("#f3-badge", { scale: 1, duration: 0.01 }, 5.6);
+          tl.to("#f3-dim", { opacity: 1, duration: 0.3 }, 5.7);
+          tl.to("#f3-pick", { y: 0, duration: 0.55, ease: "pro-out" }, 5.7);
+          LB.tap(tl, "#f3-t4", 6.15);
+          LB.press(tl, "#f3-up", 6.15);
+          tl.to("#f3-pick", { y: 760, duration: 0.4, ease: "power2.in" }, 6.32);
+          tl.to("#f3-dim", { opacity: 0, duration: 0.3 }, 6.38);
+          LB.LIB_CARDS.forEach((_, i) => {
+            const [x0, y0] = LB.LIB_SLOTS[i], [x1, y1] = LB.LIB_SLOTS[i + 1];
+            tl.to(`#f3l-c${i}`, { x: x1 - x0, y: y1 - y0, duration: 0.55, ease: "pro-inout" }, 6.65 + i * 0.04);
+          });
+          tl.to("#f3l-new", { opacity: 1, scale: 1, duration: 0.45, ease: "pro-pop" }, 6.9);
+          tl.to("#f3l-cnt", { y: -36, duration: 0.4, ease: "pro-pop" }, 7.2);
+          tl.to("#f3l-new-vw", { opacity: 0, duration: 0.35, ease: "pro-out" }, 7.55);
+          LB.dropChars(tl, "#f3-upl", 7.7, 0.015, 0.28);
+          LB.cam(tl, CAM, 960, 540, 1, 7.65, 0.39, "pro-inout");
+          window.__timelines["f3-save-upload"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

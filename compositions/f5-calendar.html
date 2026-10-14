@@ -1,0 +1,754 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template id="f5-calendar-template">
+      <style>
+@font-face { font-family: "Sora"; src: url("../assets/fonts/sora-var.woff2") format("woff2"); font-weight: 100 800; font-display: block; }
+@font-face { font-family: "Inter"; src: url("../assets/fonts/inter-var.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
+@font-face { font-family: "JetBrains Mono"; src: url("../assets/fonts/jbmono-500.woff2") format("woff2"); font-weight: 500; font-display: block; }
+
+#root {
+  --bg: #FBF7F4; --ink: #33241C; --ink-2: #54423A; --muted: #8A8280; --line: #EFEAE5; --card: #FFFFFF;
+  --green: #DFEEC8; --lavender: #DCD4F5; --peach: #FBDCC4; --blue: #D6E5F4; --pink: #F7D9E3;
+  --grad-a: #D3CBF2; --grad-b: #ECE7FA;
+  --shadow: 0 1px 2px rgba(51,36,28,.06), 0 8px 24px rgba(51,36,28,.08);
+  --shadow-lg: 0 2px 4px rgba(51,36,28,.06), 0 30px 80px rgba(51,36,28,.18);
+  position: absolute; inset: 0; overflow: hidden;
+  background: var(--bg); color: var(--ink);
+  font-family: "Inter", sans-serif;
+}
+#root * { box-sizing: border-box; }
+.abs { position: absolute; }
+.sora { font-family: "Sora", sans-serif; letter-spacing: -0.03em; }
+.label { font-family: "Inter", sans-serif; font-size: 15px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.mono { font-family: "JetBrains Mono", monospace; font-weight: 500; }
+
+/* Light-canvas texture so the frame never reads as a blank slide */
+.paper { position: absolute; inset: 0; pointer-events: none;
+  background-image: radial-gradient(rgba(51,36,28,.06) 1.2px, transparent 1.4px);
+  background-size: 28px 28px; }
+.warm-glow { position: absolute; border-radius: 50%; pointer-events: none; filter: blur(10px); }
+
+/* Mascot */
+.mascot { position: absolute; transform-origin: 50% 100%; will-change: transform; }
+.mascot svg { display: block; width: 100%; height: 100%; overflow: visible; }
+
+/* Generic vertical video player (not TikTok's UI) */
+.player { position: absolute; border-radius: 8px; overflow: hidden; background: var(--card); box-shadow: var(--shadow-lg); }
+.player .scene { position: absolute; inset: 0; }
+.player .scene svg { display: block; width: 100%; height: 100%; }
+.player .shade { position: absolute; left: 0; right: 0; bottom: 0; height: 38%;
+  background: linear-gradient(to top, rgba(51,36,28,.55), rgba(51,36,28,0)); }
+.player .rail { position: absolute; right: 14px; bottom: 120px; display: flex; flex-direction: column; gap: 18px; }
+.player .rail i { display: block; width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,.88); }
+.player .meta { position: absolute; left: 20px; right: 84px; bottom: 22px; color: #fff; }
+.player .handle { font-family: "Inter", sans-serif; font-weight: 700; font-size: 20px; }
+.player .cap { font-family: "Inter", sans-serif; font-weight: 500; font-size: 18px; line-height: 1.3; margin-top: 6px; }
+.player .views { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; font-weight: 700; font-size: 18px; }
+.player .views svg { width: 18px; height: 18px; }
+.player .views .tick { display: inline-block; height: 24px; overflow: hidden; vertical-align: bottom; }
+.player .views .tick > div { display: flex; flex-direction: column; }
+.player .views .tick span { display: block; height: 24px; line-height: 24px; font-variant-numeric: tabular-nums; }
+
+/* Illustrated thumbnail */
+.thumb { position: relative; border-radius: 8px; overflow: hidden; }
+.thumb svg.art { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.thumb .play { position: absolute; left: 50%; top: 50%; width: 34%; aspect-ratio: 1; margin-left: -17%; margin-top: -17%;
+  border-radius: 50%; background: rgba(255,255,255,.92); display: flex; align-items: center; justify-content: center; }
+.thumb .play::after { content: ""; border-left: 11px solid var(--ink); border-top: 7px solid transparent; border-bottom: 7px solid transparent; margin-left: 3px; transform: scale(var(--ps, 1)); }
+.thumb .dur { position: absolute; left: 6px; bottom: 6px; background: var(--ink); color: #fff; font: 600 11px/1 "Inter", sans-serif;
+  padding: 4px 7px; border-radius: 999px; }
+
+/* Cards, pills */
+.card { background: var(--card); border-radius: 12px; box-shadow: var(--shadow); }
+.pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 8px 18px;
+  font: 600 20px/1 "Inter", sans-serif; color: var(--ink); white-space: nowrap; }
+.pill .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--ink); opacity: .55; }
+
+/* Phone */
+.phone { position: absolute; width: 444px; height: 900px; border-radius: 66px; background: var(--ink); padding: 13px;
+  box-shadow: 0 40px 90px rgba(51,36,28,.22); }
+.phone .screen { position: absolute; inset: 13px; border-radius: 54px; overflow: hidden; background: #fff; }
+.phone .island { position: absolute; left: 50%; top: 26px; width: 118px; height: 34px; margin-left: -59px; border-radius: 20px; background: var(--ink); z-index: 50; }
+.phone .status { position: absolute; left: 0; right: 0; top: 0; height: 64px; display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 40px 0 46px; font: 700 17px/1 "Inter", sans-serif; color: var(--ink); z-index: 40; }
+/* Lyrebird library screen (rebuilt from "Main screen" design) — coordinates are inside the 418×874 phone screen */
+.lb-scr { position: absolute; inset: 0; background: #fff; }
+.lb-kick { position: absolute; left: 22px; top: 76px; font: 600 11px/1 "Inter", sans-serif; letter-spacing: .14em; color: var(--muted); }
+.lb-av { position: absolute; right: 22px; top: 66px; width: 30px; height: 30px; border-radius: 50%; background: var(--line); }
+.lb-h { position: absolute; left: 22px; top: 96px; font: 700 34px/36px "Sora", sans-serif; letter-spacing: -0.035em; color: var(--ink); }
+.lb-h .tk { display: inline-block; height: 36px; overflow: hidden; vertical-align: top; }
+.lb-h .tk > div { display: flex; flex-direction: column; }
+.lb-h .tk span { display: block; height: 36px; }
+.lb-meta { position: absolute; left: 22px; right: 22px; top: 180px; display: flex; justify-content: space-between; font: 500 12px/1 "Inter", sans-serif; color: var(--muted); }
+.lb-search { position: absolute; left: 22px; right: 22px; top: 204px; height: 42px; border-radius: 10px; background: var(--bg); border: 1.5px solid var(--line);
+  display: flex; align-items: center; gap: 10px; padding: 0 14px; font: 500 13px/1 "Inter", sans-serif; color: var(--muted); }
+.lb-search i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--muted); display: block; }
+.lb-pills { position: absolute; left: 22px; top: 258px; display: flex; gap: 8px; }
+.lb-pills span { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 13px; border-radius: 999px; font: 600 12px/1 "Inter", sans-serif; color: var(--ink); border: 1.5px solid var(--line); background: #fff; }
+.lb-pills span.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.lb-pills b { width: 8px; height: 8px; border-radius: 50%; display: block; }
+.lb-card { position: absolute; left: 0; top: 0; width: 181px; height: 318px; border-radius: 12px; overflow: hidden; }
+.lb-card .art { position: absolute; left: 0; top: 0; width: 181px; height: 168px; }
+.lb-card .art svg { display: block; width: 100%; height: 100%; }
+.lb-card .body { position: absolute; left: 12px; right: 12px; top: 178px; }
+.lb-card .chip { display: inline-block; padding: 4px 8px; border-radius: 999px; background: var(--ink); color: #fff; font: 600 11px/1 "Inter", sans-serif; }
+.lb-card .q { margin-top: 8px; font: 700 13.5px/1.25 "Inter", sans-serif; color: var(--ink); }
+.lb-card .tags { margin-top: 8px; display: flex; gap: 5px; }
+.lb-card .tags span { padding: 4px 8px; border-radius: 999px; background: rgba(255,255,255,.75); font: 600 10px/1 "Inter", sans-serif; color: var(--ink); }
+.lb-card .tags span.dk { background: var(--ink); color: #fff; }
+.lb-card .saved { margin-top: 8px; font: 500 11px/1 "Inter", sans-serif; color: var(--ink-2); }
+.lb-card .vw { position: absolute; right: 10px; top: 10px; display: flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 999px; background: rgba(51,36,28,.72); color: #fff; font: 700 12px/1 "Inter", sans-serif; }
+.lb-card .vw svg { width: 13px; height: 13px; }
+.lb-card .pl { position: absolute; left: 50%; top: 66px; width: 38px; height: 38px; margin-left: -19px; border-radius: 50%; background: rgba(255,255,255,.92); }
+.lb-card .pl::after { content: ""; position: absolute; left: 15px; top: 12px; border-left: 11px solid var(--ink); border-top: 7px solid transparent; border-bottom: 7px solid transparent; }
+.lb-nav { position: absolute; left: 18px; right: 18px; bottom: 26px; height: 64px; border-radius: 32px; background: var(--ink); display: flex; align-items: center; justify-content: space-around; padding: 0 12px; z-index: 30; }
+.lb-nav span { display: flex; flex-direction: column; align-items: center; gap: 5px; font: 600 10px/1 "Inter", sans-serif; color: rgba(255,255,255,.62); width: 56px; }
+.lb-nav span.on { color: #fff; }
+.lb-nav span i { width: 18px; height: 18px; border-radius: 5px; border: 2px solid currentColor; display: block; }
+.lb-plus { position: absolute; left: 50%; bottom: 52px; width: 64px; height: 64px; margin-left: -32px; border-radius: 50%; background: var(--peach); border: 5px solid var(--ink);
+  display: flex; align-items: center; justify-content: center; font: 400 36px/1 "Inter", sans-serif; color: var(--ink); z-index: 31; }
+
+/* Brief document (stage coords: 1220,60 · 600×870) */
+.bd { position: absolute; left: 1220px; top: 60px; width: 600px; height: 870px; background: #fff; border-radius: 12px; box-shadow: var(--shadow-lg); }
+.bd .in { position: absolute; left: 36px; right: 36px; top: 0; bottom: 0; }
+.bd .ttl { position: absolute; left: 0; top: 36px; font: 700 30px/1.1 "Sora", sans-serif; letter-spacing: -0.03em; color: var(--ink); }
+.bd .rdy { position: absolute; right: 0; top: 38px; padding: 8px 14px; border-radius: 999px; background: var(--blue); font: 700 15px/1 "Inter", sans-serif; color: var(--ink); }
+.bd .from { position: absolute; left: 0; top: 80px; font: 500 15px/1 "Inter", sans-serif; color: var(--muted); }
+.bd .lbl { position: absolute; left: 0; font: 600 14px/1 "Inter", sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.bd .hook { position: absolute; left: 0; right: 0; top: 150px; font: 700 29px/1.22 "Sora", sans-serif; letter-spacing: -0.03em; color: var(--ink); }
+.bd .row { position: absolute; left: 0; right: 0; display: flex; gap: 14px; align-items: baseline; font: 500 19px/1.25 "Inter", sans-serif; color: var(--ink); }
+.bd .row .n { width: 28px; font: 700 15px/1 "JetBrains Mono", monospace; color: var(--muted); }
+.bd .row .tm { width: 76px; font: 500 16px/1 "JetBrains Mono", monospace; color: var(--ink-2); flex: none; }
+.bd .capt { position: absolute; left: 0; right: 0; top: 560px; font: 500 19px/1.35 "Inter", sans-serif; color: var(--ink); }
+.bd .foot { position: absolute; left: 0; right: 0; top: 664px; display: flex; gap: 10px; align-items: center; }
+.bd .btn { position: absolute; left: 0; right: 0; top: 764px; height: 70px; border-radius: 12px; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center; font: 700 21px/1 "Inter", sans-serif; }
+
+/* Kinetic type */
+.kt { isolation: isolate; position: absolute; font-family: "Sora", sans-serif; font-weight: 700; letter-spacing: -0.045em; color: var(--ink); white-space: nowrap; line-height: 1; }
+.kt-m { display: inline-block; overflow: hidden; vertical-align: top; padding: 0.04em 0 0.1em; margin: -0.04em 0 -0.1em; }
+.kt-c { display: inline-block; will-change: transform; }
+.kt-sp { display: inline-block; width: 0.26em; }
+.kt-hl { position: absolute; z-index: -1; border-radius: 14px; transform-origin: 0 50%; }
+.kt-roll { position: relative; overflow: hidden; }
+.kt-roll > div { display: flex; flex-direction: column; }
+/* Big player variant */
+.player.big .handle { font-size: 30px; } .player.big .cap { font-size: 27px; margin-top: 8px; }
+.player.big .views { font-size: 30px; gap: 10px; margin-top: 14px; }
+.player.big .views svg { width: 30px; height: 30px; }
+.player.big .views .tick { height: 36px; } .player.big .views .tick span { height: 36px; line-height: 36px; }
+.player.big .rail { right: 22px; bottom: 210px; gap: 26px; } .player.big .rail i { width: 66px; height: 66px; }
+.player.big .meta { left: 30px; right: 120px; bottom: 54px; }
+.player .prog { position: absolute; left: 0; right: 0; bottom: 0; height: 8px; background: rgba(255,255,255,.35); z-index: 3; }
+.player .prog b { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: #fff; transform-origin: 0 50%; display: block; }
+
+.tap { position: absolute; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; background: rgba(51,36,28,.28); pointer-events: none; z-index: 80; }
+
+        #f5-cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+        #f5-src { position: absolute; left: 110px; top: 190px; width: 360px; height: 640px; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-lg); opacity: .4; }
+        #f5-src svg { display: block; width: 100%; height: 100%; }
+        #f5-arrow { position: absolute; left: 510px; top: 500px; width: 560px; height: 40px; }
+        #f5-cal { position: absolute; left: 40px; top: 40px; width: 1840px; height: 1000px; background: #fff; border-radius: 16px; box-shadow: var(--shadow-lg); transform-origin: 50% 50%; }
+        #f5-cal .hd { position: absolute; left: 40px; top: 34px; font: 700 64px/1 "Sora", sans-serif; letter-spacing: -0.04em; color: var(--ink); }
+        #f5-cal .seg { position: absolute; right: 40px; top: 44px; display: flex; gap: 8px; }
+        #f5-cal .seg span { padding: 12px 22px; border-radius: 999px; font: 600 20px/1 "Inter", sans-serif; color: var(--ink); background: var(--bg); }
+        #f5-cal .seg span.on { background: var(--ink); color: #fff; }
+        .f5-wd { position: absolute; top: 132px; width: 251px; text-align: center; font: 600 16px/1 "Inter", sans-serif; letter-spacing: .1em; color: var(--muted); }
+        .f5-row { position: absolute; left: 40px; width: 1757px; height: 158px; }
+        .f5-cell { position: absolute; top: 0; width: 251px; height: 158px; border-top: 2px solid var(--line); border-left: 2px solid var(--line); }
+        .f5-cell .d { position: absolute; left: 14px; top: 12px; font: 600 22px/1 "Inter", sans-serif; color: var(--ink); }
+        .f5-cell.out .d { color: #C9C1BB; }
+        .f5-it { position: absolute; left: 12px; right: 12px; top: 46px; border-radius: 10px; padding: 10px 12px; font: 600 17px/1.2 "Inter", sans-serif; color: var(--ink); }
+        .f5-it small { display: block; margin-top: 6px; font: 600 13px/1 "Inter", sans-serif; color: var(--ink-2); }
+        #f5-it22 { background: var(--blue); }
+        #f5-st { display: inline-block; margin-top: 8px; padding: 5px 10px; border-radius: 999px; background: #fff; font: 700 13px/1 "Inter", sans-serif; color: var(--ink); }
+        .f5-chip { position: absolute; left: 12px; right: 12px; top: 46px; height: 92px; border-radius: 10px; }
+        .f5-chip i { position: absolute; left: 12px; height: 9px; border-radius: 5px; background: rgba(255,255,255,.9); display: block; }
+        .f5-th { position: absolute; width: 150px; height: 266px; transform-origin: 50% 50%; box-shadow: var(--shadow); border-radius: 8px; }
+        .f5-th .thumb { width: 100%; height: 100%; }
+        .f5-strip { position: absolute; left: 0; top: 0; width: 1920px; height: 300px; z-index: 6; overflow: hidden; }
+        .f5-lab { left: 80px; top: 52px; font-size: 200px; }
+        #f5m { z-index: 7; }
+        #f5-pick { left: 120px; top: 300px; font-size: 150px; line-height: 0.95; z-index: 6; }
+        #f5-box { position: absolute; left: 650px; top: 150px; width: 620px; height: 780px; background: #fff; border-radius: 28px; box-shadow: 0 30px 80px rgba(51,36,28,.22); transform-origin: 0 0; z-index: 4; }
+        #f5-box .hb { position: absolute; left: 50%; top: 14px; width: 56px; height: 6px; margin-left: -28px; border-radius: 3px; background: var(--line); }
+        #f5-box .t { position: absolute; left: 40px; top: 44px; font: 700 42px/1 "Sora", sans-serif; letter-spacing: -0.04em; color: var(--ink); }
+        #f5-box .x { position: absolute; right: 36px; top: 42px; width: 46px; height: 46px; border-radius: 50%; background: var(--bg); font: 600 22px/46px "Inter", sans-serif; text-align: center; color: var(--ink); }
+        #f5-box .q { position: absolute; left: 40px; top: 100px; font: 500 19px/1 "Inter", sans-serif; color: var(--ink-2); }
+        #f5-box .sg { position: absolute; left: 40px; right: 40px; top: 140px; height: 104px; border-radius: 12px; background: var(--green); padding: 20px 20px 0 76px; }
+        #f5-box .sg b { position: absolute; left: 22px; top: 24px; width: 36px; height: 36px; border-radius: 50%; background: #fff; font: 800 20px/36px "Inter", sans-serif; text-align: center; color: var(--ink); }
+        #f5-box .sg .h { font: 700 21px/1.2 "Inter", sans-serif; color: var(--ink); }
+        #f5-box .sg .s { margin-top: 6px; font: 500 16px/1.3 "Inter", sans-serif; color: var(--ink-2); }
+        #f5-box .lb { position: absolute; left: 40px; font: 600 15px/1 "Inter", sans-serif; letter-spacing: .08em; color: var(--ink-2); }
+        #f5-box .fd { position: absolute; height: 66px; border-radius: 12px; border: 2px solid var(--line); display: flex; align-items: center; padding: 0 20px; font: 500 22px/1 "Inter", sans-serif; color: var(--ink); }
+        #f5-box .fd i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #A9C98A; margin-right: 14px; }
+        #f5-box .pl { position: absolute; top: 590px; display: flex; gap: 10px; left: 40px; }
+        #f5-box .pl span { padding: 14px 24px; border-radius: 999px; background: var(--bg); font: 600 18px/1 "Inter", sans-serif; color: var(--ink-2); }
+        #f5-box .pl span.on { background: var(--ink); color: #fff; }
+        #f5-box .sv { position: absolute; left: 40px; right: 40px; top: 670px; height: 74px; border-radius: 14px; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center; font: 700 24px/1 "Inter", sans-serif; }
+        #f5-date span { display: inline-block; margin-right: .26em; }
+
+      </style>
+      <div id="root" data-composition-id="f5-calendar" data-width="1920" data-height="1080" data-duration="7.6">
+        <div class="paper"></div>
+        <div id="f5-shake" style="position:absolute;inset:0"><div id="f5-stage"></div></div>
+      </div>
+      <script>
+        (() => {
+// Lyrebird shared motion library — inlined into every frame by src/build.mjs.
+// Pure functions of their inputs: no clocks, no Math.random. Everything is added to the caller's paused timeline.
+const LB = (() => {
+  // Easing system: pro-out (entrances/moves), pro-inout (camera), pro-pop (snaps, slams, landings).
+  if (!window.__proEases) {
+    window.__proEases = true;
+    if (window.CustomEase) {
+      gsap.registerPlugin(CustomEase);
+      CustomEase.create("pro-out", "M0,0 C0.16,1 0.3,1 1,1");
+      CustomEase.create("pro-inout", "M0,0 C0.7,0 0.2,1 1,1");
+    } else {
+      gsap.registerEase("pro-out", gsap.parseEase("pro-out"));
+      gsap.registerEase("pro-inout", gsap.parseEase("pro-inout"));
+    }
+    gsap.registerEase("pro-pop", gsap.parseEase("pro-pop"));
+  }
+  const C = {
+    bg: "#FBF7F4", ink: "#33241C", ink2: "#54423A", muted: "#8A8280", line: "#EFEAE5", card: "#FFFFFF",
+    green: "#DFEEC8", lavender: "#DCD4F5", peach: "#FBDCC4", blue: "#D6E5F4", pink: "#F7D9E3",
+    kraft: "#E2C3A0", kraftDark: "#C9A27E",
+  };
+
+  // ---------- Mascots (720×700 viewBox) ----------
+  const BODY = {
+    blue: "M270 0 C520 0 720 80 720 200 C720 450 560 695 230 695 C100 695 0 620 0 500 C0 240 90 0 270 0Z",
+    pink: "M470 0 C620 0 720 240 720 470 C720 620 640 695 520 695 C250 690 0 560 0 240 C0 90 260 0 470 0Z",
+    lavender: "M210 0 C470 0 720 70 720 230 C720 520 640 695 500 695 C250 695 0 610 0 450 C0 190 70 0 210 0Z",
+    green: "M520 0 C640 0 720 110 720 250 C720 500 560 695 330 695 C120 695 0 610 0 480 C0 210 230 0 520 0Z",
+  };
+  BODY.lavender2 = BODY.green;
+  const FILL = { blue: "#D6E5F4", pink: "#F5D7E2", lavender: "#DBD3F4", green: "#DFEBC8" };
+  const DEFAULT_FACE = {
+    blue: { eyes: "closed", mouth: "smile" }, pink: { eyes: "open", mouth: "o" },
+    lavender: { eyes: "open", mouth: "flat" }, green: { eyes: "open", mouth: "smile" },
+    lavender2: { eyes: "open", mouth: "smile" },
+  };
+  const EYE_CX = [288, 432];
+  function eyeAttrs(state, cx) {
+    if (state === "closed") return { x: cx - 32, y: 304, width: 64, height: 10, rx: 5 };
+    if (state === "tall") return { x: cx - 23, y: 262, width: 46, height: 90, rx: 23 };
+    if (state === "squeeze") return { x: cx - 30, y: 300, width: 60, height: 12, rx: 6 };
+    return { x: cx - 22, y: 276, width: 44, height: 66, rx: 22 };
+  }
+  const attrStr = (a) => Object.entries(a).map(([k, v]) => `${k}="${v}"`).join(" ");
+
+  function mascotSVG(id, kind, face, full) {
+    face = Object.assign({}, DEFAULT_FACE[kind], face || {});
+    const fill = kind === "lavender2" ? `url(#${id}-grad)` : FILL[kind];
+    const cheek = kind === "pink" ? "#F2C9B4" : "#E8CFC0";
+    const defs = kind === "lavender2"
+      ? `<defs><linearGradient id="${id}-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#D3CBF2"/><stop offset="1" stop-color="#ECE7FA"/></linearGradient></defs>` : "";
+    const op = (m) => (face.mouth === m ? 1 : 0);
+    const ink = `stroke="${C.ink}" stroke-linecap="round" fill="none"`;
+    const happy = face.eyes === "happy";
+    const eyeA = eyeAttrs(happy ? "closed" : face.eyes, EYE_CX[0]), eyeB = eyeAttrs(happy ? "closed" : face.eyes, EYE_CX[1]);
+    const extras = full === false ? "" : `
+      <path id="${id}-sweat" d="M600 120 C620 150 632 170 632 186 A32 32 0 0 1 568 186 C568 170 580 150 600 120Z" fill="#CFE3F5" stroke="${C.ink}" stroke-width="6" opacity="0"/>
+      <g id="${id}-ex" opacity="0"><rect x="584" y="-120" width="34" height="96" rx="17" fill="${C.ink}"/><circle cx="601" cy="10" r="19" fill="${C.ink}"/></g>
+      <g id="${id}-qm" opacity="0"><path d="M572 -70 C572 -112 640 -112 640 -72 C640 -44 606 -40 606 -14" ${ink} stroke-width="20"/><circle cx="606" cy="22" r="13" fill="${C.ink}"/></g>`;
+    return `<svg viewBox="0 0 720 700">${defs}<path d="${BODY[kind]}" fill="${fill}"/>
+      <g id="${id}-face">
+        <rect id="${id}-cL" x="182" y="356" width="70" height="38" rx="19" fill="${cheek}" style="transform-origin:217px 375px"/>
+        <rect id="${id}-cR" x="468" y="356" width="70" height="38" rx="19" fill="${cheek}" style="transform-origin:503px 375px"/>
+        <rect id="${id}-eL" ${attrStr(eyeA)} fill="${C.ink}" opacity="${happy ? 0 : 1}"/>
+        <rect id="${id}-eR" ${attrStr(eyeB)} fill="${C.ink}" opacity="${happy ? 0 : 1}"/>
+        <path id="${id}-hL" d="M262 322 Q288 284 314 322" ${ink} stroke-width="11" opacity="${happy ? 1 : 0}"/>
+        <path id="${id}-hR" d="M406 322 Q432 284 458 322" ${ink} stroke-width="11" opacity="${happy ? 1 : 0}"/>
+        <path id="${id}-bL" d="${BROWS.none[0]}" ${ink} stroke-width="10" opacity="0"/>
+        <path id="${id}-bR" d="${BROWS.none[1]}" ${ink} stroke-width="10" opacity="0"/>
+        <path id="${id}-mS" d="M287 392 A72 72 0 0 0 431 392" ${ink} stroke-width="7" opacity="${op("smile")}"/>
+        <circle id="${id}-mO" cx="360" cy="430" r="34" fill="${C.ink}" opacity="${op("o")}"/>
+        <rect id="${id}-mF" x="302" y="416" width="116" height="10" rx="5" fill="${C.ink}" opacity="${op("flat")}"/>
+        <path id="${id}-mR" d="M300 446 Q360 386 420 446" ${ink} stroke-width="8" opacity="${op("frown")}"/>
+        <path id="${id}-mG" d="M282 388 H438 A78 78 0 0 1 282 388Z" fill="${C.ink}" opacity="${op("grin")}"/>
+        <path id="${id}-mW" d="M296 428 q16 -16 32 0 q16 16 32 0 q16 -16 32 0 q16 16 32 0" ${ink} stroke-width="7" opacity="${op("wobble")}"/>
+      </g>${extras}</svg>`;
+  }
+  const BROWS = {
+    none: ["M252 236 L318 236", "M402 236 L468 236"],
+    sad: ["M250 250 L316 226", "M404 226 L470 250"],
+    worried: ["M252 244 L316 230", "M404 230 L468 244"],
+    up: ["M254 214 L318 206", "M402 206 L466 214"],
+    angry: ["M252 222 L318 246", "M402 246 L468 222"],
+    quizzical: ["M254 232 L318 238", "M402 204 L466 192"],
+  };
+  const MOUTHS = { smile: "S", o: "O", flat: "F", frown: "R", grin: "G", wobble: "W" };
+
+  // Outer div: position / hops / squash (origin bottom-centre). Inner .bob: idle float only.
+  function mascot(id, kind, o) {
+    const w = o.w, h = Math.round(o.w * 700 / 720);
+    return `<div class="mascot" id="${id}" style="left:${o.x}px;top:${o.y}px;width:${w}px;height:${h}px;${o.z != null ? "z-index:" + o.z + ";" : ""}">
+      <div class="bob" id="${id}-bob" style="width:100%;height:100%">${mascotSVG(id, kind, o.face)}</div></div>`;
+  }
+
+  // eyes: open | closed | tall | squeeze | sad | happy (^ ^ arcs)
+  function eyes(tl, id, state, t, dur = 0.15) {
+    const happy = state === "happy", r = happy ? "closed" : state;
+    tl.to(`#${id}-eL`, { attr: eyeAttrs(r, EYE_CX[0]), opacity: happy ? 0 : 1, duration: dur, ease: "pro-out" }, t);
+    tl.to(`#${id}-eR`, { attr: eyeAttrs(r, EYE_CX[1]), opacity: happy ? 0 : 1, duration: dur, ease: "pro-out" }, t);
+    tl.to(`#${id}-hL, #${id}-hR`, { opacity: happy ? 1 : 0, duration: dur * 0.8, ease: "none" }, t);
+  }
+  function mouth(tl, id, kind, t, dur = 0.15) {
+    Object.values(MOUTHS).forEach((k) => tl.to(`#${id}-m${k}`, { opacity: MOUTHS[kind] === k ? 1 : 0, duration: dur, ease: "none" }, t));
+  }
+  function brows(tl, id, kind, t, dur = 0.15) {
+    const [l, r] = BROWS[kind] || BROWS.none;
+    tl.to(`#${id}-bL`, { attr: { d: l }, opacity: kind === "none" ? 0 : 1, duration: dur, ease: "pro-out" }, t);
+    tl.to(`#${id}-bR`, { attr: { d: r }, opacity: kind === "none" ? 0 : 1, duration: dur, ease: "pro-out" }, t);
+  }
+  function sweat(tl, id, on, t) {
+    if (on) tl.fromTo(`#${id}-sweat`, { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.25, ease: "pro-pop", immediateRender: false }, t);
+    else tl.to(`#${id}-sweat`, { opacity: 0, y: 30, duration: 0.25, ease: "power2.in" }, t);
+  }
+  // pop a ! or ? above the head, hold, fade
+  function mark(tl, id, kind, t, hold = 1.0) {
+    const el = `#${id}-${kind === "?" ? "qm" : "ex"}`;
+    tl.fromTo(el, { opacity: 0, scale: 0.2, rotation: -20, transformOrigin: "600px 40px" }, { opacity: 1, scale: 1, rotation: 0, duration: 0.3, ease: "pro-pop", immediateRender: false }, t);
+    tl.to(el, { opacity: 0, scale: 0.6, duration: 0.2, ease: "power2.in" }, t + hold);
+  }
+  const EMO = {
+    happy: ["open", "smile", "none"], joy: ["happy", "grin", "up"], proud: ["happy", "smile", "none"],
+    sad: ["sad", "frown", "sad"], worried: ["open", "wobble", "worried"], shocked: ["tall", "o", "up"],
+    confused: ["open", "flat", "quizzical"], neutral: ["open", "flat", "none"], content: ["closed", "smile", "none"],
+    determined: ["open", "smile", "angry"], wince: ["squeeze", "flat", "angry"],
+  };
+  function emote(tl, id, name, t, dur = 0.15) {
+    const [e, m, b] = EMO[name];
+    eyes(tl, id, e, t, dur); mouth(tl, id, m, t, dur); brows(tl, id, b, t, dur);
+  }
+  // little disbelief shake (rotation wobble) on the outer mascot
+  function shake(tl, sel, t, deg = 6, n = 5) {
+    tl.to(sel, { rotation: deg, duration: 0.05, ease: "none", yoyo: true, repeat: n }, t);
+    tl.to(sel, { rotation: 0, duration: 0.1 }, t + 0.05 * (n + 1));
+  }
+  function tilt(tl, sel, deg, t, dur = 0.3) { tl.to(sel, { rotation: deg, duration: dur, ease: "pro-pop" }, t); }
+  function blink(tl, id, t, rest = "open") {
+    eyes(tl, id, "closed", t, 0.07);
+    eyes(tl, id, rest, t + 0.11, 0.09);
+  }
+  // Deterministic blink schedule every ~2.5–4s, skipping anything within 0.45s of an `avoid` time.
+  const GAPS = [2.7, 3.6, 3.1, 2.5, 3.9, 2.9, 3.4];
+  function blinks(tl, id, t0, t1, phase = 0, avoid = [], rest = "open") {
+    let t = t0 + 0.6 + phase, i = Math.round(phase * 10);
+    while (t < t1 - 0.3) {
+      if (!avoid.some((a) => Math.abs(a - t) < 0.45)) blink(tl, id, t, rest);
+      t += GAPS[i++ % GAPS.length];
+    }
+  }
+  function look(tl, id, x, y, t, dur = 0.3) {
+    tl.to(`#${id}-face`, { x, y, duration: dur, ease: "pro-inout" }, t);
+  }
+  function squash(tl, sel, t, sx = 1.12, sy = 0.88) {
+    tl.to(sel, { scaleX: sx, scaleY: sy, duration: 0.1, ease: "pro-out" }, t);
+    tl.to(sel, { scaleX: 1, scaleY: 1, duration: 0.55, ease: "pro-pop" }, t + 0.1);
+  }
+  // Hop: stretch up, travel, squash on landing.
+  function hop(tl, sel, t, height = 40) {
+    tl.to(sel, { scaleX: 0.92, scaleY: 1.1, duration: 0.1, ease: "pro-out" }, t);
+    tl.to(sel, { y: -height, duration: 0.2, ease: "pro-out" }, t + 0.05);
+    tl.to(sel, { y: 0, duration: 0.18, ease: "power2.in" }, t + 0.25);
+    tl.to(sel, { scaleX: 1, scaleY: 1, duration: 0.15 }, t + 0.15);
+    squash(tl, sel, t + 0.43, 1.1, 0.9);
+  }
+  function bob(tl, id, t0, t1, amp = 7, period = 1.8, phase = 0) {
+    const half = period / 2, n = Math.max(0, Math.floor((t1 - t0 - phase) / half) - 1);
+    tl.fromTo(`#${id}-bob`, { y: 0 }, { y: -amp, duration: half, ease: "sine.inOut", yoyo: true, repeat: n }, t0 + phase);
+  }
+
+  // ---------- Mini mascot inside thumbnail / scene art (static face, optional ids) ----------
+  // UIDP is set per frame (LB.prefix) so auto ids stay unique across the assembled page.
+  let UID = 0, UIDP = "x";
+  function miniMascot(kind, x, y, w, face, id) {
+    const h = w * 700 / 720;
+    const inner = mascotSVG(id || (UIDP + "mm" + (++UID)), kind, face, false).replace("<svg viewBox=\"0 0 720 700\">", "");
+    return `<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="0 0 720 700" overflow="visible">${inner}`;
+  }
+
+  // ---------- Illustrated 9:16 thumbnails (viewBox 90×160) ----------
+  const S = `stroke="${C.ink}" stroke-linecap="round" stroke-linejoin="round" fill="none"`;
+  const ART = [
+    // 0 coffee cup with steam
+    [C.peach, `<path d="M38 52 q-5 -7 0 -14 q5 -7 0 -14" ${S} stroke-width="3"/><path d="M50 52 q-5 -7 0 -14 q5 -7 0 -14" ${S} stroke-width="3"/>
+      <rect x="24" y="62" width="40" height="42" rx="8" fill="#fff"/><path d="M64 72 h5 a9 9 0 0 1 0 18 h-5" ${S} stroke-width="4"/><ellipse cx="44" cy="108" rx="30" ry="5" fill="${C.kraftDark}" opacity=".35"/>`],
+    // 1 phone on tripod
+    [C.blue, `<path d="M45 92 L28 140 M45 92 L62 140 M45 92 V140" ${S} stroke-width="3"/><rect x="31" y="40" width="28" height="52" rx="6" fill="${C.ink}"/><rect x="34" y="44" width="22" height="44" rx="3" fill="${C.pink}"/><circle cx="45" cy="66" r="6" fill="#fff"/>`],
+    // 2 plant
+    [C.green, `<path d="M45 96 C30 80 24 64 30 48 C40 58 46 76 45 96Z" fill="#9DBE7A"/><path d="M45 96 C58 78 66 66 62 50 C52 60 46 76 45 96Z" fill="#B5D18F"/><path d="M45 96 C44 76 42 60 46 40" ${S} stroke-width="2.5"/>
+      <path d="M30 96 h30 l-4 34 h-22z" fill="${C.kraft}"/>`],
+    // 3 skincare bottle
+    [C.pink, `<rect x="38" y="34" width="14" height="14" rx="3" fill="${C.ink}"/><rect x="33" y="48" width="24" height="10" rx="2" fill="#fff"/><rect x="28" y="58" width="34" height="68" rx="10" fill="#fff"/><rect x="34" y="78" width="22" height="22" rx="4" fill="${C.lavender}"/>`],
+    // 4 sneaker
+    [C.lavender, `<path d="M16 104 C16 88 26 82 34 80 L44 92 C52 96 64 98 72 102 C78 104 78 112 74 114 H20 C16 114 16 110 16 104Z" fill="#fff"/><path d="M16 110 H76" stroke="${C.ink}" stroke-width="4" stroke-linecap="round"/><path d="M36 86 l6 -4 M40 92 l6 -4 M44 96 l6 -3" ${S} stroke-width="2.5"/>`],
+    // 5 noodles bowl
+    [C.peach, `<path d="M30 70 C34 52 40 40 44 34 M46 70 C48 52 54 40 60 32" ${S} stroke-width="3"/><path d="M36 76 q4 -10 8 0 q4 -10 8 0 q4 -10 8 0" ${S} stroke-width="3"/><path d="M18 78 H72 C72 98 60 110 45 110 C30 110 18 98 18 78Z" fill="#fff"/><path d="M26 90 H64" stroke="${C.pink}" stroke-width="5" stroke-linecap="round"/>`],
+    // 6 laptop
+    [C.blue, `<rect x="20" y="58" width="50" height="34" rx="4" fill="${C.ink}"/><rect x="24" y="62" width="42" height="26" rx="2" fill="${C.green}"/><path d="M12 96 H78 L72 102 H18Z" fill="#fff"/><rect x="30" y="68" width="20" height="4" rx="2" fill="#fff"/><rect x="30" y="76" width="28" height="4" rx="2" fill="#fff"/>`],
+    // 7 mascot mid-wave
+    [C.green, () => `<path d="M68 70 C74 62 76 56 74 50" stroke="${C.pink}" stroke-width="7" stroke-linecap="round" fill="none"/>` + miniMascot("pink", 14, 70, 62, { mouth: "smile" })],
+    // 8 mascot holding a sign (blank sign)
+    [C.lavender, () => `<path d="M45 64 V84" stroke="${C.ink}" stroke-width="3"/><rect x="20" y="34" width="50" height="32" rx="4" fill="#fff"/><rect x="28" y="44" width="34" height="5" rx="2.5" fill="${C.line}"/><rect x="28" y="53" width="22" height="5" rx="2.5" fill="${C.line}"/>` + miniMascot("blue", 15, 80, 60)],
+    // 9 book
+    [C.pink, `<path d="M45 58 C36 52 24 52 16 56 V108 C24 104 36 104 45 110Z" fill="#fff"/><path d="M45 58 C54 52 66 52 74 56 V108 C66 104 54 104 45 110Z" fill="#fff"/><path d="M45 58 V110" stroke="${C.ink}" stroke-width="2.5"/><path d="M22 66 h16 M22 74 h16 M52 66 h16 M52 74 h12" stroke="${C.line}" stroke-width="3" stroke-linecap="round"/>`],
+    // 10 candle
+    [C.green, `<path d="M45 42 C40 50 40 56 45 60 C50 56 50 50 45 42Z" fill="#F5B98A"/><path d="M45 60 V66" stroke="${C.ink}" stroke-width="2.5"/><rect x="31" y="66" width="28" height="54" rx="6" fill="#fff"/><rect x="31" y="92" width="28" height="10" fill="${C.peach}"/>`],
+    // 11 camera
+    [C.peach, `<rect x="16" y="62" width="58" height="40" rx="8" fill="${C.ink}"/><rect x="30" y="54" width="18" height="10" rx="3" fill="${C.ink}"/><circle cx="45" cy="82" r="13" fill="#fff"/><circle cx="45" cy="82" r="7" fill="${C.lavender}"/><circle cx="64" cy="70" r="3" fill="${C.pink}"/>`],
+  ];
+  const DURS = ["0:24", "0:18", "0:41", "0:15", "0:33", "0:27", "0:52", "0:12", "0:36", "0:21", "0:19", "0:45"];
+  function thumbArt(i) {
+    const [bg, body] = ART[i % ART.length];
+    return `<svg class="art" viewBox="0 0 90 160" preserveAspectRatio="xMidYMid slice"><rect width="90" height="160" fill="${bg}"/>${typeof body === "function" ? body() : body}</svg>`;
+  }
+  function thumb(i, o = {}) {
+    const art = o.art || thumbArt(i);
+    const dur = o.dur || DURS[i % DURS.length];
+    return `<div class="thumb ${o.cls || ""}" ${o.id ? `id="${o.id}"` : ""} style="${o.style || ""}">${art}${o.noPlay ? "" : `<div class="play"></div>`}<div class="dur">${dur}</div></div>`;
+  }
+
+  // ---------- Featured video scenes (viewBox 270×480) ----------
+  function hearthArt(p) {
+    return `<svg viewBox="0 0 270 480" preserveAspectRatio="xMidYMid slice"><rect width="270" height="480" fill="${C.peach}"/>
+      <ellipse cx="128" cy="338" rx="70" ry="10" fill="${C.kraftDark}" opacity=".3"/>
+      <g id="${p}-bag" style="transform-origin:128px 330px">
+        <path d="M74 150 H182 L188 330 H68Z" fill="${C.kraft}"/>
+        <path d="M74 150 L84 128 H172 L182 150Z" fill="${C.kraftDark}"/>
+        <rect x="92" y="210" width="72" height="78" rx="8" fill="#fff"/>
+        <path d="M128 230 C116 240 116 262 128 270 C140 262 140 240 128 230Z" fill="${C.ink2}"/>
+        <path d="M128 234 V266" stroke="#fff" stroke-width="2.5"/>
+      </g>
+      <g id="${p}-peek">${miniMascot("green", -58, 196, 150, { mouth: "smile" }, p + "-m")}
+        <rect x="70" y="262" width="34" height="34" rx="6" fill="#fff"/><path d="M104 270 h6 a8 8 0 0 1 0 16 h-6" ${S} stroke-width="4"/></g>
+    </svg>`;
+  }
+  function grindArt(p) {
+    return `<svg viewBox="0 0 270 480" preserveAspectRatio="xMidYMid slice"><rect width="270" height="480" fill="${C.lavender}"/>
+      <ellipse cx="135" cy="430" rx="100" ry="12" fill="${C.ink}" opacity=".07"/>
+      <g id="${p}-pm" style="transform-origin:135px 430px">${miniMascot("pink", 30, 220, 210, { mouth: "smile" }, p + "-m")}</g>
+      <g id="${p}-cup">
+        <g id="${p}-steam" opacity=".9"><path d="M150 214 q-7 -10 0 -20 q7 -10 0 -20" ${S} stroke-width="5"/><path d="M168 214 q-7 -10 0 -20 q7 -10 0 -20" ${S} stroke-width="5"/></g>
+        <rect x="138" y="224" width="46" height="50" rx="9" fill="#fff"/><path d="M184 236 h7 a11 11 0 0 1 0 22 h-7" ${S} stroke-width="5"/>
+      </g>
+    </svg>`;
+  }
+  const VIEW_ICON = `<svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" fill="none" stroke="#fff" stroke-width="2.2"/><circle cx="12" cy="12" r="3.2" fill="#fff"/></svg>`;
+  function player(o) {
+    const views = o.viewsHTML || `<span>${o.views || ""}</span>`;
+    return `<div class="player ${o.big ? "big" : ""}" id="${o.id}" style="left:${o.x}px;top:${o.y}px;width:${o.w}px;height:${o.h}px;${o.style || ""}">
+      <div class="scene" id="${o.id}-scene">${o.art}</div>
+      ${o.overlay || ""}
+      <div class="shade"></div>${o.prog ? `<div class="prog"><b id="${o.id}-prog"></b></div>` : ""}
+      <div class="rail"><i></i><i></i><i></i><i></i></div>
+      <div class="meta"><div class="handle">${o.handle}</div><div class="cap">${o.caption}</div>
+        <div class="views" id="${o.id}-views">${VIEW_ICON}${views}</div></div>
+    </div>`;
+  }
+
+  // Looping mini-scene motion, added explicitly cycle by cycle (finite, seek-safe).
+  function animHearth(tl, p, t0, t1) {
+    const n = Math.max(1, Math.floor((t1 - t0) / 3));
+    tl.fromTo(`#${p}-bag`, { rotation: -6 }, { rotation: 6, duration: 1.5, ease: "sine.inOut", yoyo: true, repeat: n * 2 - 1 }, t0);
+    tl.fromTo(`#${p}-peek`, { y: 0 }, { y: -6, duration: 1.2, ease: "sine.inOut", yoyo: true, repeat: Math.max(0, Math.floor((t1 - t0) / 1.2) - 1) }, t0);
+    blinks(tl, p + "-m", t0, t1, 0.3);
+  }
+  // One sip → wince cycle (2.8s). `mistake` = id of the MISTAKE #1 overlay (shown on first cycle and kept).
+  function grindCycle(tl, p, t, mistake, first) {
+    const m = p + "-m";
+    tl.to(`#${p}-cup`, { x: -46, y: -36, rotation: -14, duration: 0.45, ease: "pro-inout", svgOrigin: "160 250" }, t);
+    tl.to(`#${p}-steam`, { opacity: 0.2, duration: 0.3 }, t);
+    eyes(tl, m, "squeeze", t + 0.55, 0.08);
+    mouth(tl, m, "flat", t + 0.55, 0.08);
+    tl.to(`#${p}-pm`, { x: 5, duration: 0.05, ease: "none", yoyo: true, repeat: 5 }, t + 0.6);
+    tl.set(`#${p}-pm`, { x: 0 }, t + 0.92);
+    if (first && mistake) tl.fromTo(`#${mistake}`, { scale: 0.4, opacity: 0, rotation: -6 }, { scale: 1, opacity: 1, rotation: -3, duration: 0.35, ease: "pro-pop" }, t + 0.6);
+    tl.to(`#${p}-cup`, { x: 0, y: 0, rotation: 0, duration: 0.5, ease: "pro-inout", svgOrigin: "160 250" }, t + 1.5);
+    tl.to(`#${p}-steam`, { opacity: 0.9, duration: 0.4 }, t + 1.8);
+    eyes(tl, m, "open", t + 1.95, 0.12);
+    mouth(tl, m, "smile", t + 1.95, 0.12);
+  }
+  function animGrind(tl, p, t0, t1, mistake) {
+    let first = true;
+    for (let t = t0 + 0.3; t + 2.2 < t1; t += 2.8) { grindCycle(tl, p, t, mistake, first); first = false; }
+  }
+
+  // ---------- Lyrebird library screen ----------
+  const LIB_SLOTS = [[22, 308], [215, 308], [22, 638], [215, 638], [22, 968], [215, 968]];
+  const LIB_CARDS = [
+    { bg: C.green, art: 2, dur: "0:41", q: "“The 3 plants I genuinely can’t kill”", tags: [["Awareness"], ["Brief ready", 1]], saved: "Saved 2 days ago" },
+    { bg: C.lavender, art: 4, dur: "0:33", q: "“Three things I check before I buy”", tags: [["Consider"]], saved: "Saved 4 days ago" },
+    { bg: C.peach, art: 0, dur: "0:24", q: "“Our morning routine, honestly”", tags: [["Convert"]], saved: "Saved 1 week ago" },
+    { bg: C.blue, art: 6, dur: "0:52", q: "“How I batch a week of content”", tags: [["Awareness"]], saved: "Saved 1 week ago" },
+  ];
+  const GRIND_CARD = { bg: C.lavender, dur: "0:31", q: "“You’re making your coffee bitter…”", tags: [["Analysing", 1]], saved: "0:31 · saved just now" };
+  function libCard(id, d, slot, artSVG, extra) {
+    const [x, y] = LIB_SLOTS[slot];
+    return `<div class="lb-card" id="${id}" style="background:${d.bg};left:${x}px;top:${y}px">
+      <div class="art">${artSVG}</div><div class="pl"></div>${extra || ""}
+      <div class="body"><span class="chip">${d.dur}</span><div class="q">${d.q}</div>
+      <div class="tags">${d.tags.map(([t, dk]) => `<span class="${dk ? "dk" : ""}">${t}</span>`).join("")}</div>
+      <div class="saved" id="${id}-saved">${d.saved}</div></div></div>`;
+  }
+  function cardArt(i) { return thumbArt(i).replace('class="art"', ""); }
+  function grindCardArt(p) {
+    return `<svg viewBox="0 0 181 168" preserveAspectRatio="xMidYMid slice"><rect width="181" height="168" fill="${C.lavender}"/>${miniMascot("pink", 40, 52, 100, { mouth: "smile" }, p + "-cm")}
+      <rect x="112" y="92" width="26" height="28" rx="5" fill="#fff"/><path d="M138 99 h4 a6 6 0 0 1 0 12 h-4" ${S} stroke-width="3"/></svg>`;
+  }
+  function statusBar() {
+    return `<div class="status"><span>9:41</span><span style="display:flex;gap:6px;align-items:center"><i style="width:18px;height:11px;border-radius:2px;background:#33241C;display:block"></i><i style="width:24px;height:12px;border-radius:3px;border:2px solid #33241C;display:block"></i></span></div>`;
+  }
+  // count: [from, to] for the "48 saved" ticker; withNew: include the @dailygrind card (id p-new) at slot 0 and shift others.
+  function libraryScreen(p, o = {}) {
+    const counts = o.counts || ["48"];
+    const tk = `<span class="tk"><div id="${p}-cnt">${counts.map((c) => `<span>${c}</span>`).join("")}</div></span>`;
+    const shift = o.withNew ? 1 : 0;
+    const cards = LIB_CARDS.map((d, i) => libCard(`${p}-c${i}`, d, i + shift, cardArt(d.art))).join("");
+    const nw = o.withNew || o.newHidden ? libCard(`${p}-new`, GRIND_CARD, 0, grindCardArt(p), `<div class="vw" id="${p}-new-vw">${VIEW_ICON}2.4M</div>`) : "";
+    return `<div class="lb-scr" id="${p}-lib">${statusBar()}
+      <div class="lb-kick">LYREBIRD</div><div class="lb-av"></div>
+      <div class="lb-h">${tk} saved,<br>12 untouched</div>
+      <div class="lb-meta"><span>Last import: 3 clips</span><span>48 results</span></div>
+      <div class="lb-search"><i></i>Search hooks, captions, tags</div>
+      <div class="lb-pills"><span class="on">All</span><span><b style="background:#A9C98A"></b>Awareness</span><span><b style="background:#A99CDF"></b>Consider</span><span><b style="background:#F0B48C"></b>Convert</span></div>
+      <div id="${p}-grid">${cards}${nw}</div>
+      <div class="lb-nav"><span class="on"><i></i>Library</span><span><i style="border-radius:50%"></i>Search</span><span style="width:70px"></span><span><i></i>Briefs</span><span><i></i>Calendar</span></div>
+      <div class="lb-plus" id="${p}-plus">+</div>
+    </div>`;
+  }
+
+  // ---------- Brief content (the user's exact copy) ----------
+  const OLD_HOOK = "You're making your coffee bitter and you don't even know it.";
+  const NEW_HOOK = "If your coffee tastes bitter at home, it's probably not your beans.";
+  const OLD_BEATS = [["0:00–0:03", "Close-up: bitter sip, reaction", 3], ["0:03–0:09", "Talking head: names the mistake", 6], ["0:09–0:18", "Demo: fine vs medium grind, side by side", 9], ["0:18–0:26", "Slow pour, first good sip", 8], ["0:26–0:31", "CTA: “Follow for part 2”", 5]];
+  const NEW_BEATS = [["0:00–0:03", "Close-up: you wince at a bitter sip", 3], ["0:03–0:08", "To camera: “It’s your grind.”", 5], ["0:08–0:17", "Fine vs medium grind, using Hearth beans", 9], ["0:17–0:24", "Slow pour, first good sip", 7], ["0:24–0:30", "CTA: “Beans are in our bio.”", 6]];
+  const NEW_CAPTION = "Bitter coffee at home? Try this before you blame your beans ☕";
+  function briefDoc(p) {
+    const SHORT = ["0–3s", "3–8s", "8–17s", "17–24s", "24–30s"];
+    const rows = NEW_BEATS.map(([, d], i) => `<div class="row" style="top:${284 + i * 44}px"><span class="n">0${i + 1}</span><span class="tm">${SHORT[i]}</span><span>${d}</span></div>`).join("");
+    return `<div class="bd" id="${p}-doc"><div class="in">
+      <div class="ttl" id="${p}-ttl">Brief for Hearth Coffee Co.</div><div class="rdy" id="${p}-rdy">Ready to film</div>
+      <div class="from">Adapted from @dailygrind · 0:31</div>
+      <div class="lbl" style="top:124px">Hook</div><div class="hook" id="${p}-hook">${NEW_HOOK}</div>
+      <div class="lbl" style="top:258px">Shot list</div><div id="${p}-rows">${rows}</div>
+      <div class="lbl" style="top:534px">Caption</div><div class="capt" id="${p}-capt">${NEW_CAPTION}</div>
+      <div class="foot" id="${p}-foot"><span class="pill" style="background:${C.line};font-size:17px;padding:9px 16px">CTA · Link in bio</span><span class="pill" style="background:${C.green};font-size:17px;padding:9px 16px"><span class="dot"></span>Awareness</span></div>
+      <div class="btn" id="${p}-btn">Add to calendar</div>
+    </div></div>`;
+  }
+
+  // ---------- Small helpers ----------
+  function tap(tl, sel, t) {
+    tl.fromTo(sel, { scale: 0.6, opacity: 0 }, { scale: 0.6, opacity: 1, duration: 0.06 }, t);
+    tl.to(sel, { scale: 1.15, opacity: 0, duration: 0.42, ease: "pro-out" }, t + 0.08);
+  }
+  function press(tl, sel, t) {
+    tl.to(sel, { scale: 0.96, duration: 0.08, ease: "power1.in" }, t);
+    tl.to(sel, { scale: 1, duration: 0.4, ease: "pro-pop" }, t + 0.08);
+  }
+  const prefix = (p) => { UIDP = p; UID = 0; };
+  // ---------- Virtual camera: put stage point (px,py) at screen point (ax,ay) with scale s ----------
+  // The camera element must have transform-origin 0 0 and no CSS transform.
+  function cam(tl, sel, px, py, s, t, dur = 0.8, ease = "pro-inout", ax = 960, ay = 540) {
+    tl.to(sel, { x: ax - px * s, y: ay - py * s, scale: s, duration: dur, ease }, t);
+  }
+  function camSet(tl, sel, px, py, s, ax = 960, ay = 540) {
+    tl.set(sel, { x: ax - px * s, y: ay - py * s, scale: s, transformOrigin: "0 0" }, 0);
+  }
+  // quick impact punch (scale bump around current state) — use on an inner wrapper, not the camera
+  function punch(tl, sel, t, amt = 0.04) {
+    tl.fromTo(sel, { scale: 1 }, { scale: 1 + amt, duration: 0.08, ease: "pro-out", immediateRender: false }, t);
+    tl.to(sel, { scale: 1, duration: 0.45, ease: "pro-pop" }, t + 0.08);
+  }
+  // ---------- Kinetic type ----------
+  // Per-character masked spans: <span class="kt-m"><span class="kt-c">L</span></span>
+  function chars(text, cls = "") {
+    return [...text].map((ch) => ch === " " ? `<span class="kt-sp"> </span>` : `<span class="kt-m"><span class="kt-c ${cls}">${ch}</span></span>`).join("");
+  }
+  function riseChars(tl, sel, t, stagger = 0.02, dur = 0.6) {
+    tl.fromTo(`${sel} .kt-c`, { yPercent: 110 }, { yPercent: 0, duration: dur, ease: "pro-out", stagger, immediateRender: true }, t);
+  }
+  function dropChars(tl, sel, t, stagger = 0.015, dur = 0.35) {
+    tl.to(`${sel} .kt-c`, { yPercent: -110, duration: dur, ease: "power3.in", stagger }, t);
+  }
+  let SHAKE = null;
+  function setShake(sel) { SHAKE = sel; }
+  function slam(tl, sel, t, from = 1.3, dur = 0.45) {
+    tl.fromTo(sel, { scale: from, opacity: 0 }, { scale: 1, opacity: 1, duration: dur, ease: "pro-pop", immediateRender: true }, t);
+    if (SHAKE) camShake(tl, SHAKE, t + dur * 0.35, 2, 0.12);
+  }
+  // one focal point: everything in `sels` steps back (or returns when on=false)
+  function defocus(tl, sels, t, on = true, dur = 0.6, op = 0.55) {
+    tl.to(sels, on ? { scale: 0.97, opacity: op, filter: "blur(3px)", duration: dur, ease: "pro-out" }
+                   : { scale: 1, opacity: 1, filter: "blur(0px)", duration: dur, ease: "pro-out" }, t);
+  }
+  // vertical roll inside a masked box: stack children of `inner`, move by -h*n
+  function rollTo(tl, innerSel, n, h, t, dur = 0.5) {
+    tl.to(innerSel, { y: -h * n, duration: dur, ease: "pro-pop" }, t);
+  }
+  function jitterChars(tl, sel, t0, t1, amp = 3) {
+    const els = Array.from(document.querySelectorAll(sel + " .kt-c"));
+    els.forEach((el, i) => {
+      const per = 0.07 + (i % 3) * 0.02, n = Math.max(1, Math.floor((t1 - t0) / per) - 1);
+      tl.fromTo(el, { x: 0, rotation: 0 }, { x: (i % 2 ? amp : -amp), rotation: (i % 2 ? -2 : 2), duration: per, ease: "none", yoyo: true, repeat: n, immediateRender: false }, t0 + i * 0.013);
+    });
+  }
+  function hl(tl, sel, t, dur = 0.4) { tl.fromTo(sel, { scaleX: 0 }, { scaleX: 1, duration: dur, ease: "pro-out", transformOrigin: "0 50%" }, t); }
+  function nudge(tl, sel, t, amp = 8, n = 5) {
+    tl.fromTo(sel, { x: 0 }, { x: amp, duration: 0.04, ease: "none", yoyo: true, repeat: n, immediateRender: false }, t);
+    tl.to(sel, { x: 0, duration: 0.05 }, t + 0.04 * (n + 1));
+  }
+  // camera shake on an inner wrapper (2–3px)
+  function camShake(tl, sel, t, amp = 3, dur = 0.2) {
+    const n = Math.round(dur / 0.04);
+    for (let i = 0; i < n; i++) tl.to(sel, { x: (i % 2 ? -amp : amp) * (1 - i / n), y: (i % 3 - 1) * amp * 0.6, duration: 0.04, ease: "none" }, t + i * 0.04);
+    tl.to(sel, { x: 0, y: 0, duration: 0.05 }, t + n * 0.04);
+  }
+  // whip pan: camera move with skewX that settles
+  function whip(tl, camSel, px, py, s, t, dur = 0.45, ax = 960, ay = 540, dir = 1) {
+    tl.to(camSel, { x: ax - px * s, y: ay - py * s, scale: s, duration: dur, ease: "pro-inout" }, t);
+    tl.to(camSel, { skewX: 8 * dir, duration: dur * 0.45, ease: "power2.in" }, t);
+    tl.to(camSel, { skewX: 0, duration: 0.5, ease: "pro-pop" }, t + dur * 0.45);
+  }
+  // 3D tilt
+  function tilt3d(tl, sel, ry, rx, t, dur = 0.7, ease = "pro-inout") {
+    tl.to(sel, { rotationY: ry, rotationX: rx, transformPerspective: 2400, duration: dur, ease }, t);
+  }
+  function tiltSet(tl, sel, ry, rx) { tl.set(sel, { rotationY: ry, rotationX: rx, transformPerspective: 2400 }, 0); }
+  // dual-layer camera: fg camera + parallax bg (moves `k` as much)
+  function camP(tl, camSel, bgSel, px, py, s, t, dur = 0.8, ease = "pro-inout", ax = 960, ay = 540, k = 0.35) {
+    cam(tl, camSel, px, py, s, t, dur, ease, ax, ay);
+    const sb = 1 + (s - 1) * k;
+    tl.to(bgSel, { x: (ax - px * s) * k, y: (ay - py * s) * k, scale: sb, duration: dur, ease }, t);
+  }
+  // hide from frame 0 (a tl.set at 0 alone does not render at exactly t=0)
+  function hide(tl, sel, vars = { opacity: 0 }) { gsap.set(sel, vars); tl.set(sel, vars, 0); }
+  // Phone placement shared by F3 -> F4 (wrapper scaled from its top-left; 444x900 phone -> ~1200px tall)
+  const PH = { x: 250, y: 110, s: 1.333, ry: 0 };
+  return { setShake, defocus, PH, hide, chars, riseChars, dropChars, slam, rollTo, jitterChars, hl, nudge, camShake, whip, tilt3d, tiltSet, camP, emote, brows, sweat, mark, shake, tilt, cam, camSet, punch, OLD_HOOK, NEW_HOOK, OLD_BEATS, NEW_BEATS, NEW_CAPTION, briefDoc, LIB_SLOTS, LIB_CARDS, GRIND_CARD, libraryScreen, libCard, grindCardArt, cardArt, statusBar, C, prefix, mascot, mascotSVG, miniMascot, eyes, mouth, blink, blinks, look, squash, hop, bob, thumb, thumbArt, hearthArt, grindArt, player, animHearth, animGrind, tap, press, VIEW_ICON };
+})();
+
+          LB.prefix("f5");
+          LB.setShake("#f5-shake");
+          const C = LB.C;
+          // October 2026 month grid: Mon 28 Sep … Sun 1 Nov. Oct d → index d + 2.
+          const cellXY = (d) => { const i = d + 2; return [80 + (i % 7) * 251, 210 + Math.floor(i / 7) * 158]; };
+          const DAYS = []; for (let i = 0; i < 35; i++) DAYS.push(i < 3 ? [28 + i, true] : i - 2 > 31 ? [i - 33, true] : [i - 2, false]);
+          const EXIST = { 7: ["Behind the roast", "Draft", C.lavender], 19: ["Grinder FAQ", "Idea", C.line] };
+          const CHIPS = [[2, C.green], [6, C.peach], [9, C.lavender], [12, C.green], [14, C.peach], [16, C.lavender], [20, C.green], [26, C.peach], [28, C.lavender], [30, C.green]];
+          let cal = `<div id="f5-cal"><div class="hd">October 2026</div><div class="seg"><span>Week</span><span class="on">Month</span><span>Year</span></div>`;
+          cal += ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((w, i) => `<div class="f5-wd" style="left:${40 + i * 251}px">${w}</div>`).join("");
+          for (let r = 0; r < 5; r++) {
+            cal += `<div class="f5-row" id="f5-r${r}" style="top:${170 + r * 158}px">`;
+            for (let c = 0; c < 7; c++) {
+              const [d, out] = DAYS[r * 7 + c];
+              const ex = !out && EXIST[d] ? `<div class="f5-it" style="background:${EXIST[d][2]};opacity:.75">${EXIST[d][0]}<small>${EXIST[d][1]}</small></div>` : "";
+              const mine = !out && d === 22 ? `<div class="f5-it" id="f5-it22">Bitter coffee hook<br><span id="f5-st">To film</span></div>` : "";
+              cal += `<div class="f5-cell ${out ? "out" : ""}" style="left:${c * 251}px"><div class="d">${d}</div>${ex}${mine}</div>`;
+            }
+            cal += `</div>`;
+          }
+          cal += `</div>`;
+          const chips = CHIPS.map(([d, col], i) => { const [x, y] = cellXY(d);
+            return `<div class="f5-chip" id="f5-ch${i}" style="left:${x - 40 + 12}px;top:${y - 40 + 46}px;right:auto;width:227px;background:${col}"><i style="top:24px;width:150px"></i><i style="top:46px;width:96px"></i></div>`; }).join("");
+          const PILE = [[760, 240, -14], [900, 200, 9], [1030, 260, -6], [820, 360, 18], [980, 380, -20], [1120, 320, 12], [700, 420, 7], [1060, 470, -11], [880, 500, 4], [1200, 420, -16]];
+          const thumbs = PILE.map(([x, y], i) => `<div class="f5-th" id="f5-t${i}" style="left:${x}px;top:${y}px">${LB.thumb([1, 3, 5, 7, 9, 11, 2, 4, 6, 8][i])}</div>`).join("");
+          document.getElementById("f5-stage").innerHTML =
+            `<div id="f5-cam">
+              <div id="f5-src">${LB.grindArt("f5s")}</div>
+              <svg id="f5-arrow" viewBox="0 0 560 40"><path d="M10 20 H530" stroke="#C9BDB2" stroke-width="4" stroke-dasharray="2 14" stroke-linecap="round"/><path d="M516 8 L536 20 L516 32" fill="none" stroke="#C9BDB2" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              ${cal.replace("</div>\n", "</div>")}
+              <div id="f5-chips" style="position:absolute;left:40px;top:40px">${chips}</div>
+              ${thumbs}
+              ${LB.briefDoc("f5d")}
+              <div id="f5-box"><div class="hb"></div><div class="t">Schedule brief</div><div class="x">×</div>
+                <div class="q">“If your coffee tastes bitter at home…”</div>
+                <div class="sg"><b>!</b><div class="h">We suggest Thu 22, 08:00</div><div class="s">October is light on Awareness. Change anything below.</div></div>
+                <div class="lb" style="top:276px">DATE</div><div class="fd" id="f5-date" style="left:40px;right:40px;top:300px;justify-content:space-between"><span id="f5-dt">${"Thursday 22 October 2026".split(" ").map((w) => "<span>" + w + "</span>").join("")}</span><span style="font-size:20px;color:#8A8280">⌄</span></div>
+                <div class="lb" style="top:398px">TIME</div><div class="fd" style="left:40px;width:262px;top:422px">08:00</div>
+                <div class="lb" style="top:398px;left:318px">STAGE</div><div class="fd" style="left:318px;width:262px;top:422px;background:${C.green};border-color:${C.green}"><i></i>Awareness</div>
+                <div class="lb" style="top:520px">STATUS</div><div class="pl"><span class="on">Planned</span><span>Filming</span><span>Posted</span></div>
+                <div class="sv" id="f5-save">Save schedule</div></div>
+            </div>
+            <div class="kt" id="f5-pick"><div>${LB.chars("PICK")}</div><div>${LB.chars("A DAY.")}</div></div>
+            <div class="f5-strip" id="f5-S2" style="background:${C.green}"><div class="kt f5-lab" id="f5-L2" style="font-size:180px;top:62px">${LB.chars("FINALLY A PLAN.")}</div></div>
+            ${LB.mascot("f5m", "green", { x: 1540, y: 690, w: 440 })}`;
+
+          const tl = gsap.timeline({ paused: true });
+          const CAM = "#f5-cam";
+          LB.camSet(tl, CAM, 960, 540, 1);
+          LB.animGrind(tl, "f5s", 0, 1.0);
+          const label = (n, tIn, tOut) => {
+            tl.fromTo("#f5-S" + n, { xPercent: -101 }, { xPercent: 0, duration: 0.45, ease: "pro-out" }, tIn - 0.12);
+            LB.riseChars(tl, "#f5-L" + n, tIn, 0.025, 0.55);
+            if (tOut) tl.to("#f5-S" + n, { xPercent: 101, duration: 0.4, ease: "power3.in" }, tOut);
+          };
+          // ---------- Scene 13: Add to calendar → the brief clumps into a Schedule box → into Thursday 22 ----------
+          LB.press(tl, "#f5d-btn", 0.1);
+          tl.to("#f5-src, #f5-arrow", { opacity: 0, duration: 0.35 }, 0.2);
+          // the brief gathers itself into the schedule box
+          tl.to("#f5d-doc", { x: -560, y: 45, scale: 0.6, duration: 0.55, ease: "pro-inout", transformOrigin: "50% 50%" }, 0.22);
+          tl.to("#f5d-doc", { opacity: 0, duration: 0.25 }, 0.42);
+          tl.fromTo("#f5-box", { x: 700, y: 130, scale: 0.55, opacity: 0 }, { x: 0, y: 0, scale: 1, duration: 0.55, ease: "pro-inout" }, 0.22);
+          tl.to("#f5-box", { opacity: 1, duration: 0.25 }, 0.38);
+          LB.hide(tl, "#f5-dt > span");
+          document.querySelectorAll("#f5-dt > span").forEach((el, i) => tl.fromTo(el, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.2, ease: "pro-out", immediateRender: false }, 0.62 + i * 0.07));
+          LB.press(tl, "#f5-save", 0.95);
+          LB.riseChars(tl, "#f5-pick", 0.12, 0.03, 0.55);
+          LB.dropChars(tl, "#f5-pick", 1.3, 0.015, 0.3);
+          // the month builds behind it
+          LB.hide(tl, "#f5-cal", { scale: 0.85, opacity: 0, filter: "blur(3px)" });
+          LB.hide(tl, ".f5-row, .f5-wd, #f5-cal .hd, #f5-cal .seg");
+          tl.to("#f5-cal", { scale: 0.97, opacity: 0.55, duration: 0.42, ease: "pro-out" }, 0.75);
+          tl.to("#f5-cal", { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.6, ease: "pro-out" }, 1.2);
+          tl.fromTo("#f5-cal .hd, #f5-cal .seg", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: "pro-out", immediateRender: false }, 0.8);
+          tl.fromTo(".f5-wd", { opacity: 0 }, { opacity: 1, duration: 0.3, immediateRender: false }, 0.85);
+          for (let r = 0; r < 5; r++) tl.fromTo(`#f5-r${r}`, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.4, ease: "pro-out", immediateRender: false }, 0.85 + r * 0.06);
+          // the box flies into Thursday 22 and becomes the calendar item
+          const [cx, cy] = cellXY(22);
+          LB.hide(tl, "#f5-it22");
+          LB.hide(tl, "#f5-st", { scale: 0 });
+          tl.to("#f5-box", { x: cx + 12 - 650, y: cy + 46 - 150, scale: 227 / 620, duration: 0.65, ease: "pro-inout" }, 1.15);
+          tl.to("#f5-box", { opacity: 0, duration: 0.15 }, 1.72);
+          tl.to("#f5-it22", { opacity: 1, duration: 0.15 }, 1.68);
+          tl.fromTo("#f5-it22", { scale: 1.12 }, { scale: 1, duration: 0.5, ease: "pro-pop", immediateRender: false }, 1.72);
+          LB.cam(tl, CAM, cx + 125, cy + 79, 2.2, 1.2, 0.75, "pro-inout");
+          tl.to("#f5-st", { scale: 1, duration: 0.35, ease: "pro-pop" }, 1.98);
+          LB.cam(tl, CAM, cx + 125, cy + 79, 2.32, 1.95, 0.9, "pro-inout");
+
+          // ---------- Scene 14: pull back, the saved pile tumbles in and snaps into the month ----------
+          LB.cam(tl, CAM, 960, 560, 0.9, 2.85, 0.7, "pro-out");
+          PILE.forEach(([, , rot], i) => {
+            tl.fromTo(`#f5-t${i}`, { y: -1100 - i * 40, rotation: rot * 2.5 }, { y: 0, rotation: rot, duration: 0.7, ease: "pro-pop" }, 3.0 + i * 0.05);
+          });
+          LB.hide(tl, ".f5-chip", { opacity: 0, scale: 0.4 });
+          CHIPS.forEach(([d], i) => {
+            const [x, y] = cellXY(d), [px, py] = PILE[i], t = 4.45 + i * 0.13;
+            tl.to(`#f5-t${i}`, { x: x - px + 50.5, y: y - py - 41, scaleX: 227 / 150, scaleY: 92 / 266, rotation: 0, duration: 0.45, ease: "pro-pop" }, t);
+            tl.to(`#f5-t${i}`, { opacity: 0, duration: 0.12 }, t + 0.38);
+            tl.to(`#f5-ch${i}`, { opacity: 1, scale: 1, duration: 0.3, ease: "pro-pop" }, t + 0.36);
+          });
+          LB.cam(tl, CAM, 960, 560, 0.95, 4.4, 2.2, "pro-inout");
+          // green mascot bounces in, looks at the full calendar, happiest squash
+          tl.fromTo("#f5m", { x: 600, y: 0, rotation: 20 }, { x: 0, rotation: 0, duration: 0.6, ease: "pro-out" }, 3.6);
+          LB.hop(tl, "#f5m", 3.65, 80);
+          LB.emote(tl, "f5m", "shocked", 3.7);
+          LB.look(tl, "f5m", -60, -30, 3.9, 0.3);
+          LB.emote(tl, "f5m", "happy", 4.6);
+          LB.emote(tl, "f5m", "joy", 6.1, 0.2);
+          LB.squash(tl, "#f5m", 6.15, 1.22, 0.78);
+          LB.hop(tl, "#f5m", 6.75, 90);
+          LB.bob(tl, "f5m", 4.3, 7.6, 7, 1.2);
+          label(2, 6.12, null);
+          window.__timelines["f5-calendar"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

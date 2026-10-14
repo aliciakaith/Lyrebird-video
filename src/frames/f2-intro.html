@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template id="f2-intro-template">
+      <style>
+/*@CSS*/
+        #root { background: transparent; }
+        #f2-ink { position: absolute; inset: -6px; background: var(--ink); overflow: hidden; }
+        #f2-cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+        #f2-word { left: 475px; top: 400px; font-size: 260px; color: var(--bg); }
+        #f2-hole { position: absolute; left: 1079px; top: 538px; width: 200px; height: 200px; margin: -100px 0 0 -100px; border-radius: 50%; background: var(--bg); }
+      </style>
+      <div id="root" data-composition-id="f2-intro" data-width="1920" data-height="1080" data-duration="2.5">
+        <div id="f2-ink"><div id="f2-cam"><div class="kt" id="f2-word"></div><div id="f2-mascots"></div><div id="f2-hole"></div></div></div>
+      </div>
+      <script>
+        (() => {
+/*@LIB*/
+          LB.prefix("f2");
+          document.getElementById("f2-word").innerHTML = LB.chars("Lyrebird");
+          // local 0 = global 14.78. Mascots land around the wordmark, overlapping the frame edges.
+          const M = [
+            ["f2-blue", "blue", -70, -60, 400, -700, -300, "content"],
+            ["f2-pink", "pink", 1540, -90, 380, 700, -320, "shocked"],
+            ["f2-lav", "lavender", 60, 690, 420, -650, 420, "joy"],
+            ["f2-green", "green", 1430, 650, 440, 680, 420, "joy"],
+            ["f2-lav2", "lavender2", 800, 790, 340, 0, 520, "happy"],
+          ];
+          document.getElementById("f2-mascots").innerHTML = M.map(([id, k, x, y, w]) => LB.mascot(id, k, { x, y, w })).join("");
+          const tl = gsap.timeline({ paused: true });
+          // ink circle explodes out of the 0:00–0:03 bracket
+          tl.fromTo("#f2-ink", { clipPath: "circle(0px at 163px 467px)" }, { clipPath: "circle(2300px at 163px 467px)", duration: 0.6, ease: "pro-out" }, 0);
+          LB.riseChars(tl, "#f2-word", 0.3, 0.045, 0.6);
+          LB.camSet(tl, "#f2-cam", 960, 540, 1.0);
+          LB.cam(tl, "#f2-cam", 1000, 540, 1.06, 0.3, 1.6, "pro-inout");
+          M.forEach(([id, , , , , dx, dy, emo], i) => {
+            const t = 0.72 + i * 0.07;
+            tl.fromTo(`#${id}`, { x: dx, y: dy, rotation: i % 2 ? 24 : -24 }, { x: 0, y: 0, rotation: i % 2 ? -6 : 6, duration: 0.45, ease: "pro-out" }, t);
+            LB.squash(tl, `#${id}`, t + 0.4, 1.15, 0.85);
+            LB.emote(tl, id, emo, t + 0.1);
+            LB.bob(tl, id, t + 0.9, 2.5, 8, 1.1, i * 0.12);
+          });
+          LB.look(tl, "f2-blue", 40, 20, 1.2, 0.3);
+          LB.look(tl, "f2-pink", -40, 26, 1.25, 0.3);
+          LB.mark(tl, "f2-pink", "!", 1.0, 0.7);
+          LB.look(tl, "f2-lav", 40, -30, 1.3, 0.3);
+          LB.look(tl, "f2-green", -40, -30, 1.3, 0.3);
+          LB.hop(tl, "#f2-lav2", 1.45, 40);
+          LB.blink(tl, "f2-lav", 1.7);
+          LB.blink(tl, "f2-green", 1.85);
+          // zoom-through: dive into the bowl of the b
+          LB.hide(tl, "#f2-hole", { scale: 0 });
+          LB.cam(tl, "#f2-cam", 1079, 538, 7, 1.95, 0.5, "power3.in");
+          tl.to("#f2-hole", { scale: 1.6, duration: 0.42, ease: "power2.in" }, 2.0);
+          window.__timelines["f2-intro"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

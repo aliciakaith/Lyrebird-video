@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template id="f6-endcard-template">
+      <style>
+/*@CSS*/
+        #root { background: transparent; }
+        #f6-grad { position: absolute; inset: -6px; background: var(--ink); }
+        #f6-cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+        #f6-word { left: 0; width: 1920px; top: 150px; font-size: 260px; text-align: center; color: var(--bg); }
+        #f6-line { left: 0; width: 1920px; top: 470px; font-size: 64px; letter-spacing: -0.03em; text-align: center; color: var(--bg); }
+        #f6-line .own .kt-c { color: var(--ink); }
+        #f6-line .own { position: relative; display: inline-block; margin-left: 10px; }
+        #f6-line .kt-hl { left: -8px; right: -10px; top: 6px; bottom: -2px; background: var(--green); }
+      </style>
+      <div id="root" data-composition-id="f6-endcard" data-width="1920" data-height="1080" data-duration="5.06">
+        <div id="f6-grad"><div id="f6-cam"></div></div>
+      </div>
+      <script>
+        (() => {
+/*@LIB*/
+          LB.prefix("f6");
+          const M = [["f6-blue", "blue", 330, 640, 330], ["f6-pink", "pink", 640, 700, 310], ["f6-green", "green", 930, 620, 360], ["f6-lav", "lavender", 1270, 690, 320]];
+          document.getElementById("f6-cam").innerHTML =
+            `<div class="kt" id="f6-word">${LB.chars("Lyrebird")}</div>
+             <div class="kt" id="f6-line">${LB.chars("Learn from what works, and")} <span class="own"><span class="kt-hl" id="f6-hl"></span>${LB.chars("make it your own.")}</span></div>` +
+            M.map(([id, k, x, y, w]) => LB.mascot(id, k, { x, y, w })).join("");
+          const tl = gsap.timeline({ paused: true });
+          // local 0 = global 59.94: the ink background wipes in over the calendar
+          tl.fromTo("#f6-grad", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.55, ease: "pro-out" }, 0);
+          LB.camSet(tl, "#f6-cam", 960, 540, 1.08);
+          LB.cam(tl, "#f6-cam", 960, 540, 1.0, 0.1, 4.5, "pro-out");
+          LB.riseChars(tl, "#f6-word", 0.12, 0.04, 0.7);
+          LB.riseChars(tl, "#f6-line", 1.22, 0.012, 0.55);
+          LB.hl(tl, "#f6-hl", 2.6, 0.5);
+          M.forEach(([id], i) => {
+            const t = 1.7 + i * 0.08;
+            tl.fromTo(`#${id}`, { y: 520, rotation: i % 2 ? 12 : -12 }, { y: 0, rotation: 0, duration: 0.55, ease: "pro-pop" }, t);
+            LB.squash(tl, `#${id}`, t + 0.5, 1.14, 0.86);
+            LB.bob(tl, id, t + 0.9, 5.06, 8, 1.4, i * 0.2);
+          });
+          LB.emote(tl, "f6-green", "joy", 2.62, 0.2);
+          LB.emote(tl, "f6-lav", "happy", 2.7);
+          LB.emote(tl, "f6-pink", "happy", 2.8);
+          LB.look(tl, "f6-blue", 20, -16, 2.9, 0.3);
+          LB.blink(tl, "f6-pink", 3.6);
+          LB.blink(tl, "f6-lav", 4.1);
+          LB.hop(tl, "#f6-green", 3.3, 50);
+          window.__timelines["f6-endcard"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

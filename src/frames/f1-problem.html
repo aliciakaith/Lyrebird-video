@@ -1,0 +1,242 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template id="f1-problem-template">
+      <style>
+/*@CSS*/
+        #f1-bg, #f1-cam, #f1-camB { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+        #f1-shake { position: absolute; inset: 0; }
+        .f1-blob { position: absolute; border-radius: 42% 58% 55% 45% / 50% 45% 55% 50%; opacity: .55; }
+        #f1-p1, #f1-p2 { transform-origin: 50% 50%; }
+        .f1-spin { position: absolute; left: 50%; top: 70px; width: 150px; height: 150px; margin-left: -75px; border-radius: 50%; background: #fff; box-shadow: var(--shadow-lg); display: flex; align-items: center; justify-content: center; z-index: 4; }
+        .f1-spin svg { width: 96px; height: 96px; }
+        #f1-mk { position: absolute; left: 0; right: 0; top: 120px; display: flex; justify-content: center; z-index: 3; }
+        #f1-mk div { background: #fff; border-radius: 10px; padding: 14px 24px; font: 800 44px/1 "Sora", sans-serif; letter-spacing: -.02em; color: var(--ink); box-shadow: 0 10px 26px rgba(51,36,28,.2); transform: rotate(-3deg); }
+        /* ECU counter (screen space) */
+        #f1-ecu { position: absolute; inset: 0; background: var(--bg); }
+        #f1-ecuN { position: absolute; left: 0; right: 0; top: 340px; display: flex; justify-content: center; align-items: center; gap: 40px; }
+        #f1-ecuN svg { width: 280px; height: 280px; }
+        #f1-ecuN .roll { height: 400px; overflow: hidden; font: 700 400px/400px "Sora", sans-serif; letter-spacing: -0.06em; color: var(--ink); }
+        #f1-ecuN .roll > div { display: flex; flex-direction: column; }
+        #f1-ecuN .roll span { display: block; height: 400px; }
+        /* kinetic type */
+        #f1-k1 { overflow: hidden; left: 700px; width: 1220px; top: 410px; height: 220px; font-size: 178px; }
+        #f1-k1 > div > div { height: 220px; display: flex; }
+        #f1-stuck { left: 760px; top: 250px; font-size: 290px; }
+        #f1-hund { left: 768px; top: 545px; font-size: 100px; }
+        #f1-hund .w2 { position: relative; display: inline-block; }
+        #f1-hund .kt-hl { left: -12px; right: -12px; top: 10px; bottom: 4px; background: #E5DDD5; }
+        #f1-thisv { left: 2030px; top: 250px; font-size: 230px; line-height: 0.95; }
+        #f1-same { left: 0; width: 1920px; top: 430px; font-size: 200px; text-align: center; }
+        #f1-same span { display: inline-block; background: var(--ink); color: var(--bg); padding: 10px 46px 26px; border-radius: 22px; }
+        .f1-chip { position: absolute; top: 60px; font: 700 190px/1 "Sora", sans-serif; letter-spacing: -0.05em; padding: 14px 40px 30px; border-radius: 26px; z-index: 6; }
+        /* rocket counter */
+        #f1-band { position: absolute; left: 0; right: 0; top: 330px; height: 430px; background: var(--bg); box-shadow: 0 20px 60px rgba(51,36,28,.18); }
+        #f1-rk { position: absolute; left: 0; width: 1920px; top: 410px; display: flex; justify-content: center; font: 700 260px/260px "Sora", sans-serif; letter-spacing: -0.06em; color: var(--ink); }
+        #f1-rk .col { height: 260px; overflow: hidden; }
+        #f1-rk .col > div { display: flex; flex-direction: column; }
+        #f1-rk .col span, #f1-rk .cm { display: block; height: 260px; }
+        #f1-ring { position: absolute; left: 1426px; top: 176px; width: 300px; height: 300px; margin: -150px 0 0 -150px; border-radius: 50%; border: 10px solid var(--ink); }
+        /* ruler world */
+        #f1-camB { background: var(--bg); }
+        #f1-ruler { position: absolute; left: 120px; top: 470px; width: 1680px; height: 4px; background: var(--ink); transform-origin: 0 50%; }
+        .f1-tk { position: absolute; top: 470px; width: 4px; background: var(--ink); transform-origin: 50% 0; }
+        .f1-tl { position: absolute; top: 512px; font: 500 30px/1 "JetBrains Mono", monospace; color: var(--ink-2); transform: translateX(-50%); }
+        #f1-brkF { position: absolute; left: 120px; top: 404px; height: 132px; border-radius: 12px; background: var(--lavender); border: 4px solid #A99CDF; transform-origin: 0 50%; }
+        #f1-brkL { position: absolute; left: 120px; top: 362px; font: 500 30px/1 "JetBrains Mono", monospace; color: var(--ink); }
+        #f1-diff { overflow: hidden; left: 120px; top: 110px; height: 190px; font-size: 170px; }
+        #f1-diff > div > div { height: 190px; position: relative; }
+        #f1-diff .kt-hl { left: -18px; top: 12px; bottom: 6px; background: var(--lavender); width: 1716px; }
+        #f1-hook { position: absolute; left: 120px; top: 600px; width: 1300px; font: 700 70px/1.12 "Sora", sans-serif; letter-spacing: -0.035em; color: var(--ink); }
+        #f1-flip { position: absolute; left: 1470px; top: 590px; width: 330px; height: 330px; border-radius: 26px; background: var(--lavender); overflow: hidden; }
+        #f1-flip > div { display: flex; flex-direction: column; }
+        #f1-flip span { display: flex; height: 330px; align-items: center; justify-content: center; font: 700 300px/1 "Sora", sans-serif; letter-spacing: -0.05em; color: var(--ink); }
+      </style>
+      <div id="root" data-composition-id="f1-problem" data-width="1920" data-height="1080" data-duration="15.5">
+        <div class="paper"></div>
+        <div id="f1-shake">
+          <div id="f1-bg"></div>
+          <div id="f1-cam"></div>
+          <div id="f1-over"></div>
+          <div id="f1-camB"></div>
+        </div>
+      </div>
+      <script>
+        (() => {
+/*@LIB*/
+          LB.prefix("f1");
+          LB.setShake("#f1-shake");
+          const C = LB.C;
+          const EYE = (c) => `<svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" fill="none" stroke="${c}" stroke-width="2"/><circle cx="12" cy="12" r="3.2" fill="${c}"/></svg>`;
+          const P1 = { x: 687, y: 55, w: 546, h: 970 };
+          const P2 = { x: 1920 + 1250, y: 55, w: 546, h: 970 };
+          const ROLL = ["0", "12K", "148K", "890K", "1.7M", "2.4M"];
+          const tick2 = `<span class="tick" style="min-width:80px"><div id="f1-v2">${ROLL.map((v) => `<span>${v}</span>`).join("")}</div></span>`;
+          const spin = `<div class="f1-spin" id="f1-spin"><svg viewBox="0 0 30 30"><path d="M15 4 A11 11 0 1 1 4 15" fill="none" stroke="#33241C" stroke-width="3" stroke-linecap="round"/><path d="M15 1 L19 4 L15 7" fill="none" stroke="#33241C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
+
+          // parallax background: soft pastel blobs across both "pages"
+          // (no background blobs: plain paper backdrop)
+
+          document.getElementById("f1-cam").innerHTML =
+            `<div class="kt" id="f1-k1"><div id="f1-k1in"><div>${LB.chars("BE HONEST.")}</div><div>${LB.chars("HOW LONG?")}</div></div></div>` +
+            `<div class="kt" id="f1-thisv"><div>${LB.chars("THIS")}</div><div>${LB.chars("VIDEO")}</div></div>` +
+            LB.player({ id: "f1-p1", ...P1, big: true, handle: "@hearthcoffee", caption: "Here's how we roast our beans ☕", views: "193", art: LB.hearthArt("f1h"), overlay: spin }) +
+            LB.player({ id: "f1-p2", ...P2, big: true, prog: true, handle: "@dailygrind", caption: "you're making your coffee bitter and you don't even know it", viewsHTML: tick2, art: LB.grindArt("f1g"), overlay: `<div id="f1-mk"><div>MISTAKE #1</div></div>` }) +
+            `<div class="f1-chip" id="f1-chip1" style="left:${1920 + 200}px;background:${C.line};color:${C.ink2}">193</div>` +
+            `<div class="f1-chip" id="f1-chip2" style="left:${1920 + 1150}px;background:${C.green};color:${C.ink}">2.4M</div>`;
+
+          document.getElementById("f1-over").innerHTML =
+            `<div class="kt" id="f1-stuck">${LB.chars("STUCK")}</div>` +
+            `<div class="kt" id="f1-hund">${LB.chars("in the")} <span class="w2"><span class="kt-hl" id="f1-hhl"></span>${LB.chars("hundreds?")}</span></div>` +
+            `<div class="kt" id="f1-same"><span>SAME IDEA.</span></div>` +
+            `<div id="f1-band"></div>` +
+            `<div id="f1-rk">${"2,400,000".split("").map((d, i) => d === "," ? `<span class="cm">,</span>` : `<div class="col"><div id="f1-col${i}">${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `<span>${n}</span>`).join("")}<span>${d}</span></div></div>`).join("")}</div>` +
+            `<div id="f1-ring"></div>` +
+            LB.mascot("f1m", "green", { x: 1400, y: 640, w: 470 }) +
+            LB.mascot("f1n", "green", { x: -250, y: 330, w: 560 }) +
+            `<div id="f1-ecu"><div id="f1-ecuN">${EYE(C.ink)}<div class="roll"><div id="f1-ecuR"><span>187</span><span>191</span><span>193</span></div></div></div></div>`;
+
+          // ruler world
+          const PX = 1680 / 31;
+          let ruler = `<div id="f1-brkF" style="width:${3 * PX}px"></div><div id="f1-brkL">0:00–0:03</div><div id="f1-ruler"></div>`;
+          for (let s = 0; s <= 31; s++) {
+            const major = (s % 5 === 0 && s !== 30) || s === 31;
+            ruler += `<div class="f1-tk" style="left:${120 + s * PX - 2}px;height:${major ? 34 : 18}px"></div>`;
+            if (major) ruler += `<div class="f1-tl" id="f1-tl${s}" style="left:${120 + s * PX}px">0:${String(s).padStart(2, "0")}</div>`;
+          }
+          ruler += `<div class="kt" id="f1-diff"><div id="f1-diffin"><div>${LB.chars("THE DIFFERENCE")}</div><div><span class="kt-hl" id="f1-dhl"></span>${LB.chars("the first 3 seconds")}</div></div></div>`;
+          ruler += `<div id="f1-hook">${"“you’re making your coffee bitter and you don’t even know it”".split(" ").map((w) => `<span style="display:inline-block;margin-right:.24em">${w}</span>`).join("")}</div>`;
+          ruler += `<div id="f1-flip"><div id="f1-flipin"><span>3</span><span>2</span><span>1</span></div></div>`;
+          document.getElementById("f1-camB").innerHTML = ruler;
+
+          const tl = gsap.timeline({ paused: true });
+          const CAM = "#f1-cam", M = "#f1m";
+          const bgFollow = (x, y, s, t, dur, ease = "pro-inout") => tl.to("#f1-bg", { x: x * 0.35, y: y * 0.35, scale: 1 + (s - 1) * 0.35, duration: dur, ease }, t);
+          const shot = (px, py, s, t, dur = 0.7, ease = "pro-inout", ax = 960, ay = 540) => { LB.cam(tl, CAM, px, py, s, t, dur, ease, ax, ay); bgFollow(ax - px * s, ay - py * s, s, t, dur, ease); };
+          tl.set("#f1-bg", { transformOrigin: "0 0" }, 0);
+
+          // ---------- Shot 1 (0–1.2): ECU on the counter, ticks, pull back fast ----------
+          LB.camSet(tl, CAM, 760, 950, 3);
+          LB.tiltSet(tl, "#f1-p1", -8, 3);
+          const ecu = [{ p: 0 }, { p: 0 }];
+          const ecuApply = () => { document.getElementById("f1-ecuR").style.transform = `translateY(${-(ecu[0].p + ecu[1].p) * 400}px)`; };
+          ecuApply();
+          tl.fromTo("#f1-ecuN", { scale: 1.12 }, { scale: 1, duration: 0.8, ease: "pro-out" }, 0);
+          tl.to(ecu[0], { p: 1, duration: 0.3, ease: "pro-pop", onUpdate: ecuApply }, 0.18);
+          tl.to(ecu[1], { p: 1, duration: 0.3, ease: "pro-pop", onUpdate: ecuApply }, 0.42);
+          LB.nudge(tl, "#f1-ecuN", 0.66, 10, 5);
+          // pull back: camera 3 → 1, the giant number docks onto the player's counter
+          shot(960, 540, 1, 0.82, 0.62, "pro-out");
+          tl.to("#f1-ecu", { backgroundColor: "rgba(251,247,244,0)", duration: 0.25, ease: "pro-out" }, 0.82);
+          tl.to("#f1-ecuN", { x: -175, y: 410, scale: 0.08, duration: 0.55, ease: "pro-out" }, 0.82);
+          tl.to("#f1-ecuN", { opacity: 0, duration: 0.12 }, 1.02);
+          LB.animHearth(tl, "f1h", 0, 15.5);
+
+          // ---------- Shot 2 (1.2–2.5): BE HONEST. → HOW LONG?, player to the left third, mascot pops up ----------
+          tl.to("#f1-p1", { x: 120 - P1.x, duration: 0.6, ease: "pro-inout" }, 0.88);
+          LB.tilt3d(tl, "#f1-p1", 14, 0, 0.88, 0.6);
+          LB.slam(tl, "#f1-k1", 1.0, 1.4, 0.45);
+          LB.rollTo(tl, "#f1-k1in", 1, 220, 1.6, 0.45);
+          shot(900, 540, 1.04, 1.2, 1.3, "pro-inout");
+          tl.fromTo(M, { y: 520, rotation: -14 }, { y: 0, rotation: 0, duration: 0.6, ease: "pro-pop" }, 1.4);
+          LB.squash(tl, M, 1.95);
+          LB.emote(tl, "f1m", "happy", 1.4);
+          LB.brows(tl, "f1m", "up", 1.4);
+          LB.look(tl, "f1m", -60, -30, 1.5, 0.3);
+          LB.bob(tl, "f1m", 2.0, 4.0, 6, 1.4);
+
+          // ---------- Shot 3 (2.5–4.1): calm — player still on the left, one quiet refresh, STUCK in the open space ----------
+          shot(900, 540, 1.06, 2.4, 1.6, "pro-inout");
+          tl.to("#f1-k1", { opacity: 0, duration: 0.2 }, 2.4);
+          LB.hide(tl, "#f1-spin", { opacity: 0 });
+          tl.fromTo("#f1-spin", { opacity: 0, scale: 0.6, rotation: 0 }, { opacity: 1, scale: 1, rotation: 200, duration: 0.35, ease: "pro-out", immediateRender: false }, 2.6);
+          tl.to("#f1-spin", { rotation: 720, duration: 0.6, ease: "none" }, 2.95);
+          tl.to("#f1-spin", { opacity: 0, duration: 0.2, ease: "power2.in" }, 3.55);
+          LB.nudge(tl, "#f1-p1-views", 3.6, 6, 5);
+          LB.slam(tl, "#f1-stuck", 2.5, 1.3, 0.45);
+          LB.riseChars(tl, "#f1-hund", 2.84, 0.02, 0.5);
+          LB.hl(tl, "#f1-hhl", 3.08, 0.35);
+          // mascot: hopeful → sad, and it deflates
+          LB.emote(tl, "f1m", "sad", 3.1, 0.25);
+          LB.look(tl, "f1m", 0, 16, 3.1, 0.3);
+          tl.to("#f1m-bob", { scaleY: 0.82, scaleX: 1.1, duration: 0.6, ease: "pro-inout", transformOrigin: "50% 100%" }, 3.25);
+          // everything clears for the whip
+          LB.dropChars(tl, "#f1-stuck", 4.0, 0.02, 0.3);
+          LB.dropChars(tl, "#f1-hund", 4.0, 0.01, 0.3);
+          tl.to("#f1-hhl", { scaleX: 0, transformOrigin: "100% 50%", duration: 0.25, ease: "power3.in" }, 4.0);
+          tl.to(M, { y: 700, duration: 0.4, ease: "power3.in" }, 4.0);
+
+          // ---------- Shot 4 (4.17–5.3): whip pan to the 2.4M creator's video ----------
+          LB.tiltSet(tl, "#f1-p2", 10, -2);
+          LB.whip(tl, CAM, 2880, 540, 1, 4.12, 0.5);
+          bgFollow(960 - 2880, 0, 1, 4.12, 0.5);
+          LB.hide(tl, "#f1-mk", { opacity: 0 });
+          LB.animGrind(tl, "f1g", 4.3, 15.5, "f1-mk");
+          LB.riseChars(tl, "#f1-thisv", 4.5, 0.025, 0.6);
+          shot(2880, 560, 1.06, 4.65, 0.7, "pro-inout");
+
+          // ---------- Shot 5 (5.3–7.2): split screen, SAME IDEA. ----------
+          LB.dropChars(tl, "#f1-thisv", 5.2, 0.015, 0.3);
+          shot(2880, 540, 1, 5.25, 0.6);
+          tl.to("#f1-p1", { x: 1436, y: -57, scale: 1.12, opacity: 1, duration: 0.7, ease: "pro-out" }, 5.25);
+          LB.tilt3d(tl, "#f1-p1", 12, 0, 5.25, 0.7, "pro-out");
+          tl.to("#f1-p2", { x: -79, y: -57, scale: 1.12, duration: 0.7, ease: "pro-out" }, 5.25);
+          LB.tilt3d(tl, "#f1-p2", -12, 0, 5.25, 0.7, "pro-out");
+          LB.slam(tl, "#f1-chip1", 5.55, 1.5, 0.45);
+          LB.slam(tl, "#f1-same", 5.78, 1.5, 0.45);
+          LB.hide(tl, "#f1-chip2", { opacity: 0 });
+          shot(2880, 520, 1.04, 6.0, 1.2, "pro-inout");
+          tl.to("#f1-same", { scale: 0.7, opacity: 0, duration: 0.25, ease: "power3.in" }, 7.05);
+
+          // ---------- 2.4 million: full-width slot rocket, docks as 2.4M, ink ring ----------
+          tl.fromTo("#f1-band", { xPercent: -100 }, { xPercent: 0, duration: 0.35, ease: "pro-out" }, 7.12);
+          tl.fromTo("#f1-rk", { opacity: 0, scale: 1.2 }, { opacity: 1, scale: 1, duration: 0.3, ease: "pro-out" }, 7.2);
+          [0, 2, 3, 4, 6, 7, 8].forEach((ci, k) => tl.fromTo(`#f1-col${ci}`, { y: 0 }, { y: -20 * 260, duration: 0.55 + k * 0.08, ease: "pro-pop" }, 7.22));
+          const v2 = ROLL.slice(1).map(() => ({ p: 0 }));
+          const v2Apply = () => { document.getElementById("f1-v2").style.transform = `translateY(${-v2.reduce((a, q) => a + q.p, 0) * 36}px)`; };
+          v2Apply();
+          v2.forEach((q, i) => tl.to(q, { p: 1, duration: 0.18, ease: "pro-pop", onUpdate: v2Apply }, 7.25 + i * 0.1));
+          LB.nudge(tl, "#f1-rk", 7.95, 10, 5);
+          tl.to("#f1-rk", { x: 466, y: -364, scale: 0.4, duration: 0.5, ease: "pro-inout" }, 8.25);
+          tl.to("#f1-rk", { opacity: 0, duration: 0.1 }, 8.55);
+          tl.to("#f1-band", { xPercent: 100, duration: 0.4, ease: "power3.in" }, 8.3);
+          tl.to("#f1-chip2", { opacity: 1, duration: 0.01 }, 8.66);
+          LB.punch(tl, "#f1-chip2", 8.66, 0.12);
+          tl.fromTo("#f1-ring", { scale: 0.4, opacity: 1 }, { scale: 2.6, opacity: 0, duration: 0.7, ease: "pro-out", immediateRender: true }, 8.7);
+          LB.hide(tl, "#f1-ring", { opacity: 0 });
+          // green mascot's face slides in from the left edge: shocked O
+          tl.fromTo("#f1n", { x: -420, rotation: 18 }, { x: 0, rotation: 8, duration: 0.5, ease: "pro-pop" }, 7.5);
+          LB.emote(tl, "f1n", "shocked", 7.6);
+          LB.look(tl, "f1n", 40, -10, 7.6, 0.2);
+          LB.mark(tl, "f1n", "!", 7.65, 1.2);
+          LB.shake(tl, "#f1n", 8.4, 6, 7);
+          tl.to("#f1n", { x: -480, duration: 0.45, ease: "power3.in" }, 9.5);
+          shot(2880, 540, 0.97, 8.7, 1.0, "pro-inout");
+
+          // ---------- Shot 6 (9.7–14.78): dive into the progress bar → giant ruler ----------
+          shot(3364, 1022, 4, 9.65, 0.55, "power3.in");
+          tl.fromTo("#f1-camB", { opacity: 0, scaleY: 0.02, transformOrigin: "50% 100%" }, { opacity: 1, scaleY: 1, duration: 0.45, ease: "pro-out" }, 10.12);
+          tl.fromTo("#f1-ruler", { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: "pro-out" }, 10.2);
+          tl.fromTo(".f1-tk", { scaleY: 0 }, { scaleY: 1, duration: 0.3, ease: "pro-pop", stagger: 0.012 }, 10.3);
+          tl.fromTo(".f1-tl", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.3, ease: "pro-out", stagger: 0.04 }, 10.4);
+          tl.fromTo("#f1-camB", { scale: 1 }, { scale: 1.05, duration: 4.4, ease: "pro-inout", immediateRender: false, transformOrigin: "960px 540px" }, 10.6);
+          LB.riseChars(tl, "#f1-diff", 10.88, 0.025, 0.6);
+          // "hook": bracket wipes 0:00–0:03, the hook flies out and lands under it
+          tl.fromTo("#f1-brkF", { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: "pro-pop" }, 12.15);
+          tl.fromTo("#f1-brkL", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.3, ease: "pro-out" }, 12.3);
+          tl.fromTo("#f1-hook", { y: -720, x: 500, rotation: -8, scale: 0.5, opacity: 0 }, { y: 0, x: 0, rotation: 0, scale: 1, opacity: 1, duration: 0.7, ease: "pro-pop" }, 12.25);
+          // "first three seconds": headline rolls, 3 · 2 · 1 flips on the words
+          LB.rollTo(tl, "#f1-diffin", 1, 190, 13.0, 0.5);
+          LB.hl(tl, "#f1-dhl", 13.2, 0.45);
+          tl.fromTo("#f1-flip", { scale: 0, rotation: -10 }, { scale: 1, rotation: 0, duration: 0.4, ease: "pro-pop" }, 12.95);
+          LB.rollTo(tl, "#f1-flipin", 1, 330, 13.42, 0.3);
+          LB.rollTo(tl, "#f1-flipin", 2, 330, 13.85, 0.3);
+          LB.nudge(tl, "#f1-flip", 14.15, 6, 5);
+
+          window.__timelines["f1-problem"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>
